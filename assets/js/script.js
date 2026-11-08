@@ -1040,23 +1040,22 @@ $("captureBtn").addEventListener("click", async () => {
   const sourceWidth = video.videoWidth;
   const sourceHeight = video.videoHeight;
 
-  // Preserve the complete camera frame. The preview uses object-fit: contain,
-  // so the saved selfie now includes the same uncropped view instead of a
-  // second center crop that made faces look artificially zoomed in.
-  // Export a portrait photo with a dedicated caption header above it. Crop
-  // the camera source to 3:4 so landscape webcams still produce a portrait.
+  // Export a portrait photo with a dedicated caption header. Keep the full
+  // canvas at the preview's 3:4 ratio so object-fit:cover cannot clip it.
   const portraitWidth = Math.min(sourceWidth, sourceHeight * 3 / 4);
   const cropX = (sourceWidth - portraitWidth) / 2;
-  const captionHeight = Math.round(portraitWidth * .20);
+  const captionHeight = Math.round(portraitWidth * .30);
+  const photoHeight = Math.round(portraitWidth * 4 / 3 - captionHeight);
+  const cropY = (sourceHeight - photoHeight) / 2;
   canvas.width = Math.max(1, Math.round(portraitWidth));
-  canvas.height = Math.max(1, Math.round(sourceHeight + captionHeight));
+  canvas.height = Math.max(1, Math.round(photoHeight + captionHeight));
   const ctx = canvas.getContext("2d");
-  const w = canvas.width, h = sourceHeight;
+  const w = canvas.width, h = photoHeight;
 
   ctx.save();
   ctx.translate(w, captionHeight);
   ctx.scale(-1, 1);
-  ctx.drawImage(video, cropX, 0, portraitWidth, sourceHeight, 0, 0, w, h);
+  ctx.drawImage(video, cropX, cropY, portraitWidth, photoHeight, 0, 0, w, h);
   ctx.restore();
 
   if(currentFaceEffect!=="none"&&latestFaceLandmarks){
@@ -1064,8 +1063,8 @@ $("captureBtn").addEventListener("click", async () => {
       const point=latestFaceLandmarks[index];
       if(!point) return null;
       return {
-        x:w-point.x*w,
-        y:point.y*h+captionHeight
+        x:w-(point.x*sourceWidth-cropX),
+        y:point.y*sourceHeight-cropY+captionHeight
       };
     });
   }
@@ -1074,7 +1073,7 @@ $("captureBtn").addEventListener("click", async () => {
   const bg="rgba(251,250,245,.95)";
 
   // Caption occupies its own paper band above the portrait photo.
-  const x=w*.035,y=captionHeight*.06,bw=w*.93,bh=captionHeight*.88;
+  const x=w*.035,y=captionHeight*.04,bw=w*.93,bh=captionHeight*.92;
   roundRect(ctx,x,y,bw,bh,Math.max(22,w*.025));
   ctx.fillStyle=bg;
   ctx.fill();
@@ -1088,7 +1087,7 @@ $("captureBtn").addEventListener("click", async () => {
 
   const smallText = $("filterSmall").textContent;
   fitCanvasFont(ctx,smallText,bw*.9,Math.max(17,w*.039),Math.max(12,w*.025),"500","Georgia, serif","italic");
-  ctx.fillText(smallText,w/2,y+bh*.22);
+  ctx.fillText(smallText,w/2,y+bh*.25);
 
   const mainText = $("filterMain").textContent;
   const mainWidth = bw*.9;
@@ -1102,7 +1101,7 @@ $("captureBtn").addEventListener("click", async () => {
     mainSize-=1;
   } while(mainSize>=minimumMainSize);
   const mainLineHeight=mainSize*1.05;
-  const mainStart=y+bh*(mainLines.length>1?.4:.46);
+  const mainStart=y+bh*(mainLines.length>1?.43:.49);
   mainLines.slice(0,2).forEach((line,index)=>ctx.fillText(line,w/2,mainStart+index*mainLineHeight));
 
   // Automatic guest name on the actual saved image
