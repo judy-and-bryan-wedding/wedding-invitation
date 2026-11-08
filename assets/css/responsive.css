@@ -320,10 +320,10 @@ main > #guest.section{
   }
 }
 
-/* Show the complete front-camera frame instead of center-cropping/zooming it. */
+/* Keep the camera booth portrait shaped, like the exported selfie. */
 #selfie #camera,
 #selfie #snapshotCanvas{
-  object-fit:contain !important;
+  object-fit:cover !important;
   object-position:center center !important;
   background:#dfe7de;
 }
@@ -423,9 +423,9 @@ main > #guest.section{
 
   #selfie .camera-stage{
     width:100% !important;
-    height:clamp(260px,48svh,390px) !important;
+    height:auto !important;
     max-width:100% !important;
-    aspect-ratio:auto !important;
+    aspect-ratio:3 / 4 !important;
     justify-self:center;
   }
 

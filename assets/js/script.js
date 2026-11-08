@@ -1043,15 +1043,20 @@ $("captureBtn").addEventListener("click", async () => {
   // Preserve the complete camera frame. The preview uses object-fit: contain,
   // so the saved selfie now includes the same uncropped view instead of a
   // second center crop that made faces look artificially zoomed in.
-  canvas.width = Math.max(1, Math.round(sourceWidth));
-  canvas.height = Math.max(1, Math.round(sourceHeight));
+  // Export a portrait photo with a dedicated caption header above it. Crop
+  // the camera source to 3:4 so landscape webcams still produce a portrait.
+  const portraitWidth = Math.min(sourceWidth, sourceHeight * 3 / 4);
+  const cropX = (sourceWidth - portraitWidth) / 2;
+  const captionHeight = Math.round(portraitWidth * .20);
+  canvas.width = Math.max(1, Math.round(portraitWidth));
+  canvas.height = Math.max(1, Math.round(sourceHeight + captionHeight));
   const ctx = canvas.getContext("2d");
-  const w = canvas.width, h = canvas.height;
+  const w = canvas.width, h = sourceHeight;
 
   ctx.save();
-  ctx.translate(w, 0);
+  ctx.translate(w, captionHeight);
   ctx.scale(-1, 1);
-  ctx.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, w, h);
+  ctx.drawImage(video, cropX, 0, portraitWidth, sourceHeight, 0, 0, w, h);
   ctx.restore();
 
   if(currentFaceEffect!=="none"&&latestFaceLandmarks){
@@ -1060,7 +1065,7 @@ $("captureBtn").addEventListener("click", async () => {
       if(!point) return null;
       return {
         x:w-point.x*w,
-        y:point.y*h
+        y:point.y*h+captionHeight
       };
     });
   }
@@ -1068,7 +1073,8 @@ $("captureBtn").addEventListener("click", async () => {
   // Caption background
   const bg="rgba(251,250,245,.95)";
 
-  const x=w*.035,y=h*.775,bw=w*.93,bh=h*.19;
+  // Caption occupies its own paper band above the portrait photo.
+  const x=w*.035,y=captionHeight*.06,bw=w*.93,bh=captionHeight*.88;
   roundRect(ctx,x,y,bw,bh,Math.max(22,w*.025));
   ctx.fillStyle=bg;
   ctx.fill();
