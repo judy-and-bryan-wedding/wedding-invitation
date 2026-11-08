@@ -1036,73 +1036,24 @@ $("captureBtn").addEventListener("click", async () => {
   const sourceWidth = video.videoWidth;
   const sourceHeight = video.videoHeight;
 
-  // Export a portrait photo with a dedicated caption header. Keep the full
-  // canvas at the preview's 3:4 ratio so object-fit:cover cannot clip it.
-  const portraitWidth = Math.min(sourceWidth, sourceHeight * 3 / 4);
-  const cropX = (sourceWidth - portraitWidth) / 2;
-  const captionHeight = Math.round(portraitWidth * .30);
-  const photoHeight = Math.round(portraitWidth * 4 / 3 - captionHeight);
-  const cropY = (sourceHeight - photoHeight) / 2;
-  canvas.width = Math.max(1, Math.round(portraitWidth));
-  canvas.height = Math.max(1, Math.round(photoHeight + captionHeight));
-  const ctx = canvas.getContext("2d");
-  const w = canvas.width, h = photoHeight;
-
-  ctx.save();
-  ctx.translate(w, captionHeight);
-  ctx.scale(-1, 1);
-  ctx.drawImage(video, cropX, cropY, portraitWidth, photoHeight, 0, 0, w, h);
-  ctx.restore();
-
+  // Crop the mirrored camera into the frame 4:5 portrait canvas.
+  const portraitWidth=Math.min(sourceWidth,sourceHeight*4/5);
+  const photoHeight=Math.round(portraitWidth*5/4);
+  const cropX=(sourceWidth-portraitWidth)/2;
+  const cropY=(sourceHeight-photoHeight)/2;
+  canvas.width=Math.max(1,Math.round(portraitWidth));
+  canvas.height=Math.max(1,photoHeight);
+  const ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;
+  ctx.save();ctx.translate(w,0);ctx.scale(-1,1);
+  ctx.drawImage(video,cropX,cropY,portraitWidth,photoHeight,0,0,w,h);ctx.restore();
   if(currentFaceEffect!=="none"&&latestFaceLandmarks){
     drawSelectedFaceEffect(ctx,latestFaceLandmarks,index=>{
-      const point=latestFaceLandmarks[index];
-      if(!point) return null;
-      return {
-        x:w-(point.x*sourceWidth-cropX),
-        y:point.y*sourceHeight-cropY+captionHeight
-      };
+      const point=latestFaceLandmarks[index];if(!point)return null;
+      return {x:w-(point.x*sourceWidth-cropX),y:point.y*sourceHeight-cropY};
     });
   }
-
-  // Caption background
-  const bg="rgba(251,250,245,.95)";
-
-  // Caption occupies its own paper band above the portrait photo.
-  const x=w*.035,y=captionHeight*.04,bw=w*.93,bh=captionHeight*.92;
-  roundRect(ctx,x,y,bw,bh,Math.max(22,w*.025));
-  ctx.fillStyle=bg;
-  ctx.fill();
-  ctx.strokeStyle="rgba(117,83,70,.58)";
-  ctx.lineWidth=Math.max(1.5,w*.004);
-  ctx.stroke();
-
-  ctx.fillStyle="#273129";
-  ctx.textAlign="center";
-  ctx.textBaseline="alphabetic";
-
-  const smallText = $("filterSmall").textContent;
-  fitCanvasFont(ctx,smallText,bw*.9,Math.max(17,w*.039),Math.max(12,w*.025),"500","Georgia, serif","italic");
-  ctx.fillText(smallText,w/2,y+bh*.25);
-
-  const mainText = $("filterMain").textContent;
-  const mainWidth = bw*.9;
-  let mainSize = Math.max(15,w*.032);
-  const minimumMainSize = Math.max(11,w*.023);
-  let mainLines=[];
-  do {
-    ctx.font=`500 ${mainSize}px Georgia, serif`;
-    mainLines=canvasTextLines(ctx,mainText,mainWidth);
-    if(mainLines.length<=2||mainSize<=minimumMainSize) break;
-    mainSize-=1;
-  } while(mainSize>=minimumMainSize);
-  const mainLineHeight=mainSize*1.05;
-  const mainStart=y+bh*(mainLines.length>1?.43:.49);
-  mainLines.slice(0,2).forEach((line,index)=>ctx.fillText(line,w/2,mainStart+index*mainLineHeight));
-
-  // Automatic guest name on the actual saved image
-  fitCanvasFont(ctx,guest.name,bw*.9,Math.max(22,w*.052),Math.max(15,w*.032),"700","Georgia, serif");
-  ctx.fillText(guest.name,w/2,y+bh*.84);
+  await document.fonts?.ready;
+  drawSelfieFrame(ctx,w,h,$("filterSmall").textContent,$("filterMain").textContent,guest.name);
 
   $("camera").style.display="none";
   if(faceFilterCanvas) faceFilterCanvas.style.display="none";
@@ -1493,6 +1444,33 @@ function fitCanvasFont(ctx,text,maxWidth,maxSize,minSize,weight,family,style="no
     size-=1;
   } while(size>=minSize);
   return size;
+}
+
+function drawSelfieFrame(ctx,width,height,smallText,mainText,guestName){
+  ctx.save();ctx.scale(width/1080,height/1350);
+  const fade=ctx.createLinearGradient(0,0,0,520);
+  fade.addColorStop(0,"rgba(25,18,15,.84)");fade.addColorStop(.5,"rgba(25,18,15,.38)");fade.addColorStop(1,"rgba(25,18,15,0)");
+  ctx.fillStyle=fade;ctx.fillRect(0,0,1080,520);
+  const foil=ctx.createLinearGradient(78,16,1002,1334);
+  foil.addColorStop(0,"#b0945c");foil.addColorStop(.35,"#e6cf96");foil.addColorStop(.6,"#cdb06e");foil.addColorStop(1,"#f0dcaa");
+  ctx.strokeStyle=foil;ctx.globalAlpha=.96;ctx.lineWidth=9;ctx.beginPath();
+  ctx.moveTo(78,16);ctx.lineTo(78,1334);ctx.moveTo(1002,16);ctx.lineTo(1002,1334);
+  ctx.moveTo(0,66);ctx.lineTo(1080,66);ctx.moveTo(0,1284);ctx.lineTo(1080,1284);ctx.stroke();
+  ctx.fillStyle="#dab670";ctx.fillRect(410,256,110,2);ctx.fillRect(560,256,110,2);
+  ctx.beginPath();ctx.moveTo(540,249);ctx.lineTo(548,257);ctx.lineTo(540,265);ctx.lineTo(532,257);ctx.closePath();ctx.fill();
+  ctx.save();ctx.globalAlpha=1;ctx.fillStyle="#fffaf0";ctx.textAlign="center";ctx.textBaseline="alphabetic";
+  ctx.shadowColor="rgba(0,0,0,.75)";ctx.shadowBlur=5;ctx.shadowOffsetY=2;
+  const family='"Cormorant Garamond", Georgia, serif';
+  fitCanvasFont(ctx,smallText,900,58,30,"500",family,"italic");ctx.fillText(smallText,540,165);
+  fitCanvasFont(ctx,mainText,900,34,20,"500",family,"italic");ctx.fillText(mainText,540,225);
+  const name=String(guestName||"").toLocaleUpperCase();let nameSize=fitCanvasFont(ctx,name,880,44,18,"500",family);
+  ctx.font="500 "+nameSize+"px "+family;let spacing=9;const chars=[...name];
+  const textWidth=()=>chars.reduce((sum,char)=>sum+ctx.measureText(char).width,0)+Math.max(0,chars.length-1)*spacing;
+  while(textWidth()>900&&nameSize>18){nameSize--;ctx.font="500 "+nameSize+"px "+family;}
+  spacing=Math.min(spacing,Math.max(0,(900-chars.reduce((sum,char)=>sum+ctx.measureText(char).width,0))/Math.max(1,chars.length-1)));
+  let cursor=540-textWidth()/2;ctx.textAlign="left";
+  for(const char of chars){ctx.fillText(char,cursor,322);cursor+=ctx.measureText(char).width+spacing;}
+  ctx.restore();ctx.restore();
 }
 
 // Slate-blue attire preview modal.
