@@ -412,12 +412,10 @@ async function submitRsvp(event) {
   rsvpForm.removeAttribute("aria-busy");
 
   if (!error && data !== true) {
-    const { data: savedResponse } = await sb
-      .from("guests")
-      .select("rsvp_status,rsvp_note,rsvp_responded_at")
-      .eq("invite_token", token)
-      .eq("active", true)
-      .maybeSingle();
+    const { data: savedRows } = await sb.rpc("get_guest_by_invite_token", {
+      p_invite_token: token
+    });
+    const savedResponse=Array.isArray(savedRows)?savedRows[0]:savedRows;
 
     if (savedResponse && ["accepted", "declined"].includes(savedResponse.rsvp_status)) {
       guest.rsvp_status = savedResponse.rsvp_status;
@@ -459,12 +457,10 @@ async function loadGuest() {
     return;
   }
 
-  const { data, error } = await sb
-    .from("guests")
-    .select("id,name,message,reservation_number,table_number,seat_number,rsvp_status,rsvp_note")
-    .eq("invite_token", token)
-    .eq("active", true)
-    .maybeSingle();
+  const { data: guestRows, error } = await sb.rpc("get_guest_by_invite_token", {
+    p_invite_token: token
+  });
+  const data=Array.isArray(guestRows)?guestRows[0]:guestRows;
 
   if (error || !data) {
     document.body.innerHTML = `
@@ -1143,10 +1139,9 @@ async function uploadPhoto() {
 
   if (!guest.id || !token || !photoBlob) return;
 
-  const { count, error: countError } = await sb
-    .from("guest_photos")
-    .select("*", { count: "exact", head: true })
-    .eq("guest_id", guest.id);
+  const { data: count, error: countError } = await sb.rpc("count_guest_photos_by_invite_token", {
+    p_invite_token: token
+  });
 
   if (countError) {
     $("uploadStatus").textContent =
@@ -1164,52 +1159,27 @@ async function uploadPhoto() {
   $("postBtn").disabled = true;
   $("uploadStatus").textContent = "Posting your photo...";
 
-  const id = crypto.randomUUID();
-  const path = `${guest.id}/${id}.png`;
-
   // Keep a local preview URL so the guest sees the new image immediately.
   const localPreviewUrl = URL.createObjectURL(photoBlob);
+  const form=new FormData();
+  form.append("action","upload");
+  form.append("invite_token",token);
+  form.append("filter_name",currentStyle);
+  form.append("photo",photoBlob,"wedding-selfie.png");
+  const {data:uploadData,error:uploadError}=await requestGuestPhotos(form);
 
-  const { error: storageError } = await sb.storage
-    .from("wedding-photos")
-    .upload(path, photoBlob, {
-      contentType: "image/png",
-      cacheControl: "3600",
-      upsert: false
-    });
-
-  if (storageError) {
+  if (uploadError) {
     URL.revokeObjectURL(localPreviewUrl);
-    $("uploadStatus").textContent =
-      "Upload failed: " + storageError.message;
+    $("uploadStatus").textContent = "Upload failed: " + uploadError;
     $("postBtn").disabled = false;
     return;
   }
-
-  const { data: insertedRow, error: dbError } = await sb
-    .from("guest_photos")
-    .insert({
-      id,
-      guest_id: guest.id,
-      invite_token: token,
-      storage_path: path,
-      filter_name: currentStyle
-    })
-    .select("id,storage_path,created_at,filter_name")
-    .single();
-
-  if (dbError) {
-    URL.revokeObjectURL(localPreviewUrl);
-    $("uploadStatus").textContent =
-      "Photo uploaded, but gallery entry failed: " + dbError.message;
-    $("postBtn").disabled = false;
-    return;
-  }
+  const id=uploadData.photo.id;
 
   // Show the photo immediately instead of waiting for Storage signed URL propagation.
   prependLocalPhoto(
     localPreviewUrl,
-    insertedRow?.created_at || new Date().toISOString(),
+    uploadData.photo.created_at || new Date().toISOString(),
     id
   );
 
@@ -1278,17 +1248,12 @@ async function loadMyPhotos(options = {}) {
 
   const { preserveLocalId = null } = options;
 
-  const { data, error } = await sb
-    .from("guest_photos")
-    .select("id,storage_path,created_at,filter_name")
-    .eq("guest_id", guest.id)
-    .eq("invite_token", token)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Could not load guest photos:", error);
+  const {data:photoData,error}=await requestGuestPhotos({action:"list",invite_token:token});
+  if(error){
+    console.error("Could not load guest photos:",error);
     return;
   }
+  const data=photoData.photos || [];
 
   const gallery = $("myPhotos");
   if (!gallery) return;
@@ -1306,28 +1271,7 @@ async function loadMyPhotos(options = {}) {
   const rendered = [];
 
   for (const item of data) {
-    let signedUrl = "";
-
-    // Signed URL creation can lag very briefly after a fresh upload.
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { data: signed, error: signedError } = await sb.storage
-        .from("wedding-photos")
-        .createSignedUrl(item.storage_path, 60 * 60);
-
-      if (!signedError && signed?.signedUrl) {
-        signedUrl = signed.signedUrl;
-        break;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 450));
-    }
-
-    if (signedUrl) {
-      rendered.push({
-        ...item,
-        signedUrl
-      });
-    }
+    if(item.signed_url) rendered.push({...item,signedUrl:item.signed_url});
   }
 
   // If the just-posted photo still has no signed URL, keep its local preview.
@@ -1357,6 +1301,22 @@ async function loadMyPhotos(options = {}) {
 
   if (!gallery.children.length) {
     gallery.innerHTML = '<p class="empty">No photos posted yet.</p>';
+  }
+}
+
+async function requestGuestPhotos(payload){
+  try{
+    const isForm=payload instanceof FormData;
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/guest-photos`,{
+      method:"POST",
+      headers:{apikey:SUPABASE_ANON_KEY,...(!isForm?{"Content-Type":"application/json"}:{})},
+      body:isForm?payload:JSON.stringify(payload)
+    });
+    const result=await response.json();
+    if(!response.ok) return {error:result.error || "Photo service request failed."};
+    return {data:result,error:null};
+  }catch(error){
+    return {error:error.message || "Could not reach the photo service."};
   }
 }
 

@@ -11,6 +11,9 @@ Supabase Free
 
 Your PC does NOT have to stay on.
 
+Before sending invitations, complete `docs/secure-rollout.md`. It sets up
+private guest data, couple sign-in, and secure photo access.
+
 ==================================================
 PART 1 - CREATE SUPABASE PROJECT
 ==================================================
@@ -96,7 +99,8 @@ Set it to:
 
 PRIVATE
 
-The SQL file already contains starter storage policies.
+Run `database/secure-invitations.sql` as described in the secure rollout guide.
+It keeps the bucket private and restricts photo access.
 
 ==================================================
 PART 5 - TEST A GUEST

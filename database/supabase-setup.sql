@@ -62,51 +62,15 @@ execute function public.limit_guest_to_three_photos();
 alter table public.guests enable row level security;
 alter table public.guest_photos enable row level security;
 
-drop policy if exists "anon can read active guests" on public.guests;
-create policy "anon can read active guests"
-on public.guests
-for select
-to anon
-using (active = true);
-
-drop policy if exists "anon can insert own photos" on public.guest_photos;
-create policy "anon can insert own photos"
-on public.guest_photos
-for insert
-to anon
-with check (
-  exists (
-    select 1
-    from public.guests g
-    where g.id = guest_id
-      and g.invite_token = guest_photos.invite_token
-      and g.active = true
-  )
-);
-
-drop policy if exists "anon can read own photos" on public.guest_photos;
-create policy "anon can read own photos"
-on public.guest_photos
-for select
-to anon
-using (
-  exists (
-    select 1
-    from public.guests g
-    where g.id = guest_id
-      and g.invite_token = guest_photos.invite_token
-      and g.active = true
-  )
-);
+-- Anonymous guest access is intentionally not granted here. Run
+-- database/secure-invitations.sql to add token-checked RPC access and the
+-- authenticated couple dashboard without exposing the tables directly.
 
 -- -----------------------------
 -- GRANTS
 -- -----------------------------
 revoke all on table public.guests from anon;
 revoke all on table public.guest_photos from anon;
-
-grant select on table public.guests to anon;
-grant select, insert on table public.guest_photos to anon;
 
 -- Guests submit an RSVP through their private invitation token.
 create or replace function public.submit_guest_rsvp(
@@ -151,23 +115,8 @@ grant execute on function public.submit_guest_rsvp(text, text, text) to anon;
 -- wedding-photos
 -- -----------------------------
 
-drop policy if exists "wedding photo uploads" on storage.objects;
-create policy "wedding photo uploads"
-on storage.objects
-for insert
-to anon
-with check (
-  bucket_id = 'wedding-photos'
-);
-
-drop policy if exists "wedding photo reads" on storage.objects;
-create policy "wedding photo reads"
-on storage.objects
-for select
-to anon
-using (
-  bucket_id = 'wedding-photos'
-);
+-- Keep storage private. Photo upload and signed reads are handled by the
+-- token-validating Edge Function in supabase/functions/guest-photos.
 
 
 alter table public.guests

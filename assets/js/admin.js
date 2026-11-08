@@ -1,35 +1,3 @@
-const savedUrl = localStorage.getItem("wedding_supabase_url") || "";
-const savedKey = localStorage.getItem("wedding_supabase_anon_key") || "";
-
-const urlInput = document.getElementById("supabaseUrlInput");
-const keyInput = document.getElementById("supabaseKeyInput");
-const configStatus = document.getElementById("supabaseConfigStatus");
-
-urlInput.value = savedUrl || (typeof DEFAULT_SUPABASE_URL !== "undefined" && !DEFAULT_SUPABASE_URL.includes("PASTE_") ? DEFAULT_SUPABASE_URL : "");
-keyInput.value = savedKey || (typeof DEFAULT_SUPABASE_ANON_KEY !== "undefined" && !DEFAULT_SUPABASE_ANON_KEY.includes("PASTE_") ? DEFAULT_SUPABASE_ANON_KEY : "");
-
-document.getElementById("saveSupabaseBtn").addEventListener("click",()=>{
-  const url=urlInput.value.trim();
-  const key=keyInput.value.trim();
-
-  if(!url || !key){
-    configStatus.textContent="Enter both the Project URL and anon/public key.";
-    return;
-  }
-
-  localStorage.setItem("wedding_supabase_url",url);
-  localStorage.setItem("wedding_supabase_anon_key",key);
-  configStatus.textContent="Supabase configuration saved. Reloading admin...";
-  setTimeout(()=>location.reload(),500);
-});
-
-document.getElementById("clearSupabaseBtn").addEventListener("click",()=>{
-  localStorage.removeItem("wedding_supabase_url");
-  localStorage.removeItem("wedding_supabase_anon_key");
-  configStatus.textContent="Saved Supabase configuration cleared.";
-  setTimeout(()=>location.reload(),500);
-});
-
 const ready =
   typeof SUPABASE_URL !== "undefined" &&
   typeof SUPABASE_ANON_KEY !== "undefined" &&
@@ -39,6 +7,9 @@ const ready =
   SUPABASE_ANON_KEY.trim() !== "";
 
 const status=document.getElementById("adminStatus");
+const authStatus=document.getElementById("adminAuthStatus");
+const loginCard=document.getElementById("adminLogin");
+const workspace=document.getElementById("adminWorkspace");
 const tableInput=document.getElementById("tableInput");
 const seatInput=document.getElementById("seatInput");
 const seatingCapacities =
@@ -59,16 +30,48 @@ updateSeatLimit();
 let sb=null;
 
 if(!ready){
-  status.textContent="Configure Supabase above before adding guests or viewing uploaded photos.";
+  authStatus.textContent="Supabase is not configured for this site.";
 }else{
   sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-  loadGuests();
-  loadPhotos();
+  sb.auth.getSession().then(({data})=>showAdminIfAuthorized(data.session));
+  sb.auth.onAuthStateChange((_event,session)=>{
+    setTimeout(()=>showAdminIfAuthorized(session),0);
+  });
+}
+
+document.getElementById("adminSignIn").addEventListener("click",async()=>{
+  if(!sb)return;
+  authStatus.textContent="Signing in…";
+  const {error}=await sb.auth.signInWithPassword({
+    email:document.getElementById("adminEmail").value.trim(),
+    password:document.getElementById("adminPassword").value
+  });
+  if(error)authStatus.textContent=error.message;
+});
+
+document.getElementById("adminSignOut").addEventListener("click",()=>sb?.auth.signOut());
+
+async function showAdminIfAuthorized(session){
+  if(!session){
+    loginCard.hidden=false;
+    workspace.hidden=true;
+    return;
+  }
+  const {data,error}=await sb.rpc("is_wedding_admin");
+  if(error||data!==true){
+    authStatus.textContent="This account is not authorized for the couple dashboard.";
+    await sb.auth.signOut();
+    return;
+  }
+  authStatus.textContent="";
+  loginCard.hidden=true;
+  workspace.hidden=false;
+  await Promise.all([loadGuests(),loadPhotos()]);
 }
 
 document.getElementById("addGuestBtn").addEventListener("click",async()=>{
   if(!sb){
-    status.textContent="Save your Supabase configuration first.";
+    status.textContent="Supabase is not configured for this site.";
     return;
   }
 
@@ -101,7 +104,7 @@ document.getElementById("addGuestBtn").addEventListener("click",async()=>{
     }
   }
 
-  const token=crypto.randomUUID().replaceAll("-","").slice(0,20);
+  const token=crypto.randomUUID().replaceAll("-","");
 
   const {error}=await sb.from("guests").insert({
     name,

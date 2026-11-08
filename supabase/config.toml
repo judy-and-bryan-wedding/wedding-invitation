@@ -1,0 +1,2 @@
+[functions.guest-photos]
+verify_jwt = false

@@ -40,6 +40,7 @@ database/supabase-setup.sql        Database tables and starter RLS
 database/add-seating-fields.sql    Optional seating-field migration
 database/add-rsvp-fields.sql       RSVP migration for an existing database
 docs/setup-guide.md                Detailed deployment instructions
+docs/secure-rollout.md             Supabase privacy and launch steps
 README.md                          This overview
 
 IMPORTANT ABOUT PHOTO STORAGE
@@ -62,6 +63,9 @@ SUPABASE SETUP
 6. Open Storage and create a PRIVATE bucket named:
    wedding-photos
 
+Before sharing guest links, complete docs/secure-rollout.md. It closes public
+guest-list/photo reads and sets up couple-only admin access.
+
 If the database was created before RSVP support was added, also run:
 database/add-rsvp-fields.sql
 
@@ -82,8 +86,8 @@ Admin
 That prevents guests from inspecting the public browser key and querying data
 outside their own invitation.
 
-The current files are designed so this stronger backend can be added without
-redesigning the website.
+The secure rollout uses an Edge Function for guest photo access and Supabase
+Auth for the couple dashboard.
 
 CAMERA
 ------

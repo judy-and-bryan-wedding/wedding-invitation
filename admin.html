@@ -12,37 +12,23 @@
   <div class="heading">
     <p class="eyebrow">Private couple dashboard</p>
     <h2>Guest Gallery</h2>
-    <p>This page shows all uploaded guest photos. Keep this admin page private.</p>
+    <p>Sign in to manage guests, RSVPs, and uploaded photos.</p>
   </div>
 
-  
-  <div class="card admin-config-card" style="margin-bottom:20px">
-    <h3 style="font-family:'Cormorant Garamond',serif;font-size:32px;margin-top:0">Supabase Configuration</h3>
-    <p style="color:var(--muted);line-height:1.7">
-      Enter your Supabase Project URL and anon/public key here. This browser will remember them.
-      For the published guest website, also copy the same production values into <code>assets/js/config.js</code>.
-    </p>
-
-    <div class="admin-config-grid">
-      <label>
-        <span>Project URL</span>
-        <input id="supabaseUrlInput" type="url" placeholder="https://your-project.supabase.co">
-      </label>
-
-      <label>
-        <span>Anon / Public Key</span>
-        <textarea id="supabaseKeyInput" rows="4" placeholder="Paste your Supabase anon/public key"></textarea>
-      </label>
-    </div>
-
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-      <button id="saveSupabaseBtn" class="btn primary">Save Supabase Config</button>
-      <button id="clearSupabaseBtn" class="btn secondary">Clear Saved Config</button>
-    </div>
-
-    <p id="supabaseConfigStatus" class="status"></p>
+  <div id="adminLogin" class="card" style="max-width:520px;margin:0 auto 20px">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:32px;margin-top:0">Couple sign in</h3>
+    <label style="display:block;margin-bottom:12px">Email
+      <input id="adminEmail" type="email" autocomplete="username" style="display:block;width:100%">
+    </label>
+    <label style="display:block;margin-bottom:12px">Password
+      <input id="adminPassword" type="password" autocomplete="current-password" style="display:block;width:100%">
+    </label>
+    <button id="adminSignIn" class="btn primary">Sign in</button>
+    <p id="adminAuthStatus" class="status" role="status"></p>
   </div>
 
+  <div id="adminWorkspace" hidden>
+  <button id="adminSignOut" class="btn secondary" style="margin:0 0 16px">Sign out</button>
   <div class="card" style="margin-bottom:20px">
     <h3 style="font-family:'Cormorant Garamond',serif;font-size:32px;margin-top:0">Guest invitations</h3>
     <div class="admin-guest-grid">
@@ -58,6 +44,7 @@
   </div>
 
   <div id="allPhotos" class="photo-grid"><p class="empty">No guest photos yet.</p></div>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
