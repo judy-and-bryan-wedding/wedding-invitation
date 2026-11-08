@@ -594,6 +594,14 @@ let faceTrackingLoading = false;
 
 const faceFilterCanvas = $("faceFilterCanvas");
 const faceFilterOptions = [...document.querySelectorAll(".face-filter-option")];
+const faceFilterLoading = $("faceFilterLoading");
+const faceFilterLoadingText = $("faceFilterLoadingText");
+
+function setFaceFilterLoading(loading,label="Loading face filters..."){
+  if(faceFilterLoadingText) faceFilterLoadingText.textContent=label;
+  if(faceFilterLoading) faceFilterLoading.hidden=!loading;
+  faceFilterOptions.forEach(option=>{option.disabled=loading;});
+}
 
 function flowerCrownPoint(landmarks,index,width,height){
   const point=landmarks[index];
@@ -960,10 +968,20 @@ faceFilterOptions.forEach(option=>{
     }
 
     if(faceFilterCanvas) faceFilterCanvas.hidden=false;
-    if(!faceLandmarker) $("uploadStatus").textContent="Loading the optional face filterâ€¦";
-    if(!faceLandmarker) $("uploadStatus").textContent="Loading the optional face filter...";
-    await startFaceTracking();
-    renderLiveFaceEffect();
+    const needsLoad=!faceLandmarker;
+    if(needsLoad){
+      setFaceFilterLoading(true);
+      $("uploadStatus").textContent="Loading the face filter for your live preview...";
+    }
+    try {
+      const ready=await startFaceTracking();
+      if(ready){
+        renderLiveFaceEffect();
+        $("uploadStatus").textContent="Face filter ready. Center your face to preview it.";
+      }
+    } finally {
+      if(needsLoad) setFaceFilterLoading(false);
+    }
   });
 });
 
