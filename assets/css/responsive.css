@@ -320,6 +320,37 @@ main > #guest.section{
   }
 }
 
+/* Give the guest letter more line width and keep its paragraphs compact. */
+#guest .guest-invitation-card{
+  padding-left:clamp(12px,3vw,42px) !important;
+  padding-right:clamp(12px,3vw,42px) !important;
+}
+
+#guest .guest-letter-content{
+  width:100%;
+  max-width:640px;
+}
+
+#guest .guest-love-note p,
+#guest .guest-love-note .guest-extra-message{
+  width:100%;
+  max-width:none;
+  font-size:clamp(17px,1.9vw,21px);
+  line-height:1.3;
+}
+
+#guest .guest-love-note p + p{
+  margin-top:clamp(9px,1.3dvh,14px);
+}
+
+@media(max-width:780px){
+  #guest .guest-love-note p,
+  #guest .guest-love-note .guest-extra-message{
+    font-size:clamp(16px,3.8vw,19px);
+    line-height:1.28;
+  }
+}
+
 /* Keep the camera booth portrait shaped, like the exported selfie. */
 #selfie #camera,
 #selfie #snapshotCanvas{
