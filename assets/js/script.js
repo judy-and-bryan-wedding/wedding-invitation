@@ -300,7 +300,6 @@ let guest = {
 
 const rsvpForm = $("rsvpForm");
 const rsvpNote = $("rsvpNote");
-const rsvpSubmitButton = $("rsvpSubmitButton");
 const rsvpStatus = $("rsvpStatus");
 const ticketAnimation = {
   play: () => $("btn")?.click(),
@@ -332,6 +331,7 @@ rsvpForm?.querySelectorAll('input[name="rsvpStatus"]').forEach(input => {
     if (!input.checked || !ticketAnimation) return;
     if (input.value === "accepted") ticketAnimation.reserve();
     if (input.value === "declined") ticketAnimation.decline();
+    void submitRsvp(input.value);
   });
 });
 
@@ -349,10 +349,6 @@ function setRsvpFormFinal(isFinal) {
     input.disabled = isFinal;
   });
   if (rsvpNote) rsvpNote.disabled = isFinal;
-  if (rsvpSubmitButton) {
-    rsvpSubmitButton.disabled = isFinal;
-    rsvpSubmitButton.textContent = isFinal ? "Response Recorded" : "Send My Regards";
-  }
 }
 
 function setRsvpUI() {
@@ -378,28 +374,21 @@ function setRsvpUI() {
   }
 }
 
-async function submitRsvp(event) {
-  event.preventDefault();
+async function submitRsvp(selectedResponse) {
   if (["accepted", "declined"].includes(guest.rsvp_status)) {
     setRsvpUI();
     return;
   }
-  const selectedResponse = rsvpForm?.querySelector('input[name="rsvpStatus"]:checked')?.value || "";
   const note = rsvpNote?.value.trim() || "";
-
-  if (!selectedResponse) {
-    setRsvpStatus("Please choose whether you can attend.", "error");
-    rsvpForm?.querySelector('input[name="rsvpStatus"]')?.focus();
-    return;
-  }
 
   if (!token || !sbReady) {
     setRsvpStatus("RSVP saving is available from your private invitation link.", "error");
     return;
   }
 
-  rsvpSubmitButton.disabled = true;
   rsvpForm.setAttribute("aria-busy", "true");
+  rsvpForm.querySelectorAll('input[name="rsvpStatus"]').forEach(input => { input.disabled = true; });
+  if (rsvpNote) rsvpNote.disabled = true;
   setRsvpStatus("Saving your response…");
 
   const { data, error } = await sb.rpc("submit_guest_rsvp", {
@@ -408,7 +397,6 @@ async function submitRsvp(event) {
     p_note: note || null
   });
 
-  rsvpSubmitButton.disabled = false;
   rsvpForm.removeAttribute("aria-busy");
 
   if (!error && data !== true) {
@@ -426,6 +414,8 @@ async function submitRsvp(event) {
   }
 
   if (error || data !== true) {
+    rsvpForm.querySelectorAll('input[name="rsvpStatus"]').forEach(input => { input.disabled = false; });
+    if (rsvpNote) rsvpNote.disabled = false;
     console.error("Could not save RSVP:", error);
     setRsvpStatus("We could not save your response right now. Please try again in a moment.", "error");
     return;
@@ -436,7 +426,7 @@ async function submitRsvp(event) {
   setRsvpUI();
 }
 
-rsvpForm?.addEventListener("submit", submitRsvp);
+rsvpForm?.addEventListener("submit", event => event.preventDefault());
 
 async function loadGuest() {
   if (!token) {
