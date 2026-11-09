@@ -105,7 +105,6 @@ function playOrRevealChoice(){
  play();
 }
 window.syncTicketToRsvpChoice=revealChosenTicket;
-window.setWitnessTicketState=()=>$('#card')?.classList.add('witness-infected');
 async function settleTicket(){
  T.style.transform='none';
  T.getAnimations().forEach(animation=>animation.cancel());
