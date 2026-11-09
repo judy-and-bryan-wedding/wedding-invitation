@@ -131,7 +131,7 @@ async function loadGuests(){
 
   const {data,error}=await sb
     .from("guests")
-    .select("id,name,invite_token,active,reservation_number,table_number,seat_number,rsvp_status,rsvp_note,rsvp_responded_at")
+    .select("id,name,invite_token,invitation_url,active,reservation_number,table_number,seat_number,rsvp_status,rsvp_note,rsvp_responded_at")
     .order("name");
 
   if(error){
@@ -148,7 +148,7 @@ async function loadGuests(){
   status.textContent=`RSVP totals: ${accepted} accepted · ${declined} declined · ${pending} awaiting response`;
 
   data.forEach(g=>{
-    const url=`${location.origin}${location.pathname.replace("admin.html","index.html")}?invite=${g.invite_token}`;
+    const url=g.invitation_url;
 
     const row=document.createElement("div");
     row.style.cssText="padding:14px 0;border-top:1px solid rgba(0,0,0,.08);display:grid;gap:6px";

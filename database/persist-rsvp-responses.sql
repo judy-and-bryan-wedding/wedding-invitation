@@ -6,6 +6,11 @@ alter table public.guests
   add column if not exists rsvp_note text,
   add column if not exists rsvp_responded_at timestamptz;
 
+alter table public.guests
+  add column if not exists invitation_url text generated always as (
+    'https://judy-and-bryan-wedding.github.io/wedding-invitation/?invite=' || invite_token
+  ) stored;
+
 alter table public.guests drop constraint if exists guests_rsvp_status_check;
 alter table public.guests add constraint guests_rsvp_status_check
   check (rsvp_status in ('pending', 'accepted', 'declined'));

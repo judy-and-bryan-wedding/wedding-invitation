@@ -72,7 +72,9 @@ database/persist-rsvp-responses.sql
 This migration lets each private invite link retrieve and save its guest's
 answer in Supabase. The saved answer is shown again on any browser or device,
 and the first answer is final. Run it in Supabase SQL Editor before sharing
-links when upgrading an existing database.
+links when upgrading an existing database. It also adds an `invitation_url`
+column that automatically combines the GitHub Pages address with each guest's
+token; the admin guest list uses this saved link.
 
 SECURITY NOTE
 -------------

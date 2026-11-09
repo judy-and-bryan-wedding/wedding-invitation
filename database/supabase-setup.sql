@@ -13,6 +13,9 @@ create table if not exists public.guests (
   name text not null,
   message text default 'We would be honored to celebrate this beautiful day with you.',
   invite_token text unique not null default encode(gen_random_bytes(16), 'hex'),
+  invitation_url text generated always as (
+    'https://judy-and-bryan-wedding.github.io/wedding-invitation/?invite=' || invite_token
+  ) stored,
   active boolean not null default true,
   rsvp_status text not null default 'pending' check (rsvp_status in ('pending', 'accepted', 'declined')),
   rsvp_note text check (rsvp_note is null or char_length(rsvp_note) <= 500),

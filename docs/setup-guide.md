@@ -78,7 +78,8 @@ RSVP fields and the token-based functions used to load and save responses.
 Each guest's first Accept or Decline is saved in Supabase and appears again
 when that same private link is opened on any browser or device. Answers,
 optional notes, and response times also appear in admin.html and the guests
-table.
+table. The migration also adds a generated `invitation_url` column containing
+the full GitHub Pages link for each guest, including their invite token.
 
 It also creates the database-side maximum:
 3 photos per guest.
