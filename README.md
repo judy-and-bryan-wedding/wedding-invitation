@@ -67,7 +67,12 @@ Before sharing guest links, complete docs/secure-rollout.md. It closes public
 guest-list/photo reads and sets up couple-only admin access.
 
 If the database was created before RSVP support was added, also run:
-database/add-rsvp-fields.sql
+database/persist-rsvp-responses.sql
+
+This migration lets each private invite link retrieve and save its guest's
+answer in Supabase. The saved answer is shown again on any browser or device,
+and the first answer is final. Run it in Supabase SQL Editor before sharing
+links when upgrading an existing database.
 
 SECURITY NOTE
 -------------
