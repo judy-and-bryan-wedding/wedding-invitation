@@ -5440,6 +5440,49 @@ main > .section{
   mask:radial-gradient(circle 13px at calc(100% - var(--source-ticket-side) - 19px) 0,#0000 12px,#000 13px),radial-gradient(circle 13px at calc(100% - var(--source-ticket-side) - 19px) 100%,#0000 12px,#000 13px);
   mask-composite:intersect;
 }
+#reservations #card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:3;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:.2;
+  mix-blend-mode:color;
+  background:
+    linear-gradient(115deg,rgba(255,255,255,.55),transparent 28%,rgba(255,255,255,.12) 52%,transparent 76%),
+    conic-gradient(from 25deg at 53% 48%,#ed86ff,#69efff,#fff2bb,#85aaff,#e998ff,#8fffe2,#ed86ff);
+  background-size:100% 100%,220% 220%;
+  background-position:center,0% 0%;
+  animation:ticket-hologram-drift 10s ease-in-out infinite alternate;
+}
+#reservations #card .witness-infection{
+  position:absolute;
+  z-index:4;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:0;
+  background:
+    radial-gradient(ellipse at 28% 35%,rgba(255,65,224,.55),transparent 44%),
+    radial-gradient(ellipse at 74% 70%,rgba(36,238,255,.55),transparent 43%),
+    repeating-conic-gradient(from 8deg at 50% 50%,rgba(255,255,255,.22) 0deg 2deg,transparent 2deg 18deg),
+    linear-gradient(125deg,rgba(76,57,255,.22),rgba(0,255,212,.3),rgba(255,63,208,.22));
+  mix-blend-mode:color-dodge;
+}
+#reservations #card.witness-infected .witness-infection{
+  animation:witness-infection-spread 1.7s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes ticket-hologram-drift{
+  to{background-position:center,100% 100%}
+}
+@keyframes witness-infection-spread{
+  0%{opacity:0;clip-path:circle(0% at 50% 50%);filter:hue-rotate(0deg)}
+  38%{opacity:.92;clip-path:circle(78% at 50% 50%);filter:hue-rotate(80deg)}
+  68%{opacity:.78;clip-path:circle(150% at 50% 50%);filter:hue-rotate(190deg)}
+  100%{opacity:.48;clip-path:circle(150% at 50% 50%);filter:hue-rotate(300deg)}
+}
+#reservations #card.witness-infected::after{opacity:.42;mix-blend-mode:color-dodge}
 #reservations #card .main,#reservations #card .side{position:relative;border:1px solid #a67c3d;border-radius:13px}
 #reservations #card .main{min-width:0;flex:1;padding:22px 35px;background:#fbfaf5}
 #reservations #card .side{width:var(--source-ticket-side);flex:0 0 var(--source-ticket-side);display:flex;align-items:center;flex-direction:column;justify-content:center;background:linear-gradient(135deg,#eaeee3,#eff1e8);text-align:center}
@@ -5478,7 +5521,7 @@ main > .section{
 #reservations #stamp,#reservations #stamp2{position:absolute;left:14%;top:39%;padding:4px 28px 6px;border:7px double #c0392b;border-radius:12px;color:#c0392b;background:rgba(251,250,245,.82);font:700 clamp(22px,6vw,54px)/1.1 Montserrat,system-ui,sans-serif;letter-spacing:.14em;text-align:center;opacity:0;pointer-events:none;filter:url(#rough);transform:rotate(-12deg);z-index:9;white-space:nowrap}
 #reservations #stamp small,#reservations #stamp2 small{display:block;font-size:clamp(7px,1.6vw,14px);letter-spacing:.38em;font-weight:600;margin-top:2px}
 #reservations #stamp2{left:15%;top:40%;border-style:solid;border-color:#56626d;color:#56626d;transform:rotate(10deg)}
-@media(prefers-reduced-motion:reduce){#reservations #ticket{opacity:1!important;transform:none!important}#flash,#fx{display:none}}
+@media(prefers-reduced-motion:reduce){#reservations #ticket{opacity:1!important;transform:none!important}#reservations #card::after{animation:none}#reservations #card.witness-infected .witness-infection{animation:none;clip-path:circle(150% at 50% 50%);opacity:.48}#flash,#fx{display:none}}
 #guest.section{
   position:relative;
   width:100% !important;

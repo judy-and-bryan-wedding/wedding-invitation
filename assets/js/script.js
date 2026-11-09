@@ -301,6 +301,13 @@ let guest = {
 const rsvpForm = $("rsvpForm");
 const rsvpNote = $("rsvpNote");
 const rsvpStatus = $("rsvpStatus");
+const weddingWitnessNames = new Set([
+  "spencer sze",
+  "marc andrew tan",
+  "felicidad abizo",
+  "lorna gotardo"
+]);
+const isWeddingWitness = name => weddingWitnessNames.has(String(name || "").trim().toLocaleLowerCase());
 const ticketAnimation = {
   play: () => $("btn")?.click(),
   reserve: (animate = true) => {
@@ -364,6 +371,7 @@ function setRsvpUI() {
   if (selectedResponse === "accepted") {
     ticketAnimation?.reserve(false);
     window.syncTicketToRsvpChoice?.();
+    if (isWeddingWitness(guest.name)) window.setWitnessTicketState?.();
     setRsvpStatus("Your response is saved — we are delighted you can join us!", "success");
   } else if (selectedResponse === "declined") {
     ticketAnimation?.decline(false);
