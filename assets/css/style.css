@@ -6203,6 +6203,7 @@ main > .section{
 }
 /* The reference ticket lives in its own document to preserve its exact styles. */
 #reservations.has-witness-ticket { --phone-tab-scale: 1 !important; }
+#reservations .witness-ticket-frame[hidden] { display: none; }
 #reservations.has-witness-ticket #fit,
 #reservations.has-witness-ticket .rsvp-card { display: none; }
 #reservations .witness-ticket-frame {

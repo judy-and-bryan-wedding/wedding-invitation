@@ -248,7 +248,37 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
 <style>
 /* Embed the supplied design without inheriting the invitation's ticket styles. */
 html { height: auto; }
-body { min-height: 0; justify-content: flex-start; background: transparent; padding: 24px 12px 32px; }
+body { min-height: 0; justify-content: flex-start; background: transparent; padding: 8px 0 10px; gap: 15px; container-type: inline-size; }
+/* Match the normal ticket's footprint using layout sizes, never a scaled bitmap. */
+.ticket { width: min(440px, 94%); min-height: clamp(128px, 32cqw, 150px); --stub-w: clamp(70px, 22.5cqw, 106px); --notch: 9px; }
+.shape, .rim { border-radius: 18px; }
+.main { padding: 14px; }
+.stub { padding: 10px; gap: 5px; }
+.label { font-size: clamp(6px, 1.5cqw, 7px); letter-spacing: .12em; }
+h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
+.seat { font-size: clamp(17px, 4.5cqw, 21px); margin: 3px 0 5px; }
+.number { font-size: clamp(21px, 5.64cqw, 27px); }
+.note { font-size: clamp(7px, 1.69cqw, 8px); line-height: 1.35; }
+.divider { width: min(82px, 100%); margin: 5px 0; }
+.divider i { width: 5px; height: 5px; }
+.stub .divider { width: 42px; }
+.stub .label:last-child { font-size: clamp(5px, 1.27cqw, 6px); }
+.rsvp { width: 100%; padding: clamp(10px, 3cqw, 16px); border-radius: 17px; }
+.pane h2 { font-size: clamp(25px, 7.5cqw, 31px); margin-bottom: 2px; }
+.hint { font-size: 11px; line-height: 1.3; margin-bottom: 9px; }
+.opts { gap: 8px; margin-bottom: 6px; }
+.face { min-height: 70px; padding: 7px 4px; border-radius: 12px; }
+.ic { width: 25px; height: 25px; margin-bottom: 3px; }
+.face b { font-size: clamp(15px, 4.1cqw, 21px); }
+.face em { font-size: clamp(10px, 2.7cqw, 13px); }
+.field { min-height: 48px; max-height: 150px; padding: 7px 10px; border-radius: 12px; font-size: 16px; }
+.act { margin-top: 6px; }
+.submit { min-height: 44px; padding: 10px; font-size: 12px; }
+/* Animate the foil lighting and outline only; perspective and scale soften text. */
+.ticket.on { animation: none; }
+.ticket.on.accepted { animation: glowIn .9s ease-out both, glow 2.8s ease-in-out .9s infinite; }
+.stamp span { font-size: clamp(16px, 4.5cqw, 22px); }
+.stamp { padding: 6px 10px; }
 .go { display: none; }
 .pane.plain { position: relative; inset: auto; background: none; box-shadow: none; }
 .pane { min-width: 0; }
@@ -378,7 +408,7 @@ body { min-height: 0; justify-content: flex-start; background: transparent; padd
     t.style.setProperty('--my', (y * 100) + '%');
     t.style.setProperty('--hue', ((x - .5) * 70) + 'deg');
     plight.setAttribute('x', px); plight.setAttribute('y', py);
-    if (on && !busy) t.style.transform = `perspective(900px) rotateX(${(.5 - y) * 9}deg) rotateY(${(x - .5) * 12}deg)`;
+    // Keep text on a flat, unscaled plane while the foil light follows the pointer.
   }
   t.addEventListener('pointermove', e => {
     const r = t.getBoundingClientRect();
@@ -573,6 +603,14 @@ body { min-height: 0; justify-content: flex-start; background: transparent; padd
     }
     syncSubmit();
     resize();
+  };
+  window.revealWitnessInvitation = ({ response, note }) => {
+    if (!initialized || on || busy || final) return;
+    plainPane.querySelector('textarea').value = note || '';
+    resize();
+    const input = joinOpts.find(option => option.value === (response === 'accepted' ? 'accept' : 'decline'));
+    input.checked = true;
+    input.dispatchEvent(new Event('change'));
   };
   function resize() {
     // Include whichever ticket copy needs more room after fonts or viewport change.

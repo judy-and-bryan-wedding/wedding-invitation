@@ -308,6 +308,17 @@ const isWitnessGuest = () => witnessGuestNames.has(
   String(guest.name || "").trim().replace(/\s+/g, " ").toLowerCase()
 );
 let witnessSavePending = false;
+let pendingWitnessReveal = null;
+
+function revealWitnessInvitation(response) {
+  const frame = $("witnessTicketFrame");
+  pendingWitnessReveal = { response, note: rsvpNote?.value || "" };
+  if (!frame || frame.dataset.ready !== "true") return;
+  $("reservations").classList.add("has-witness-ticket");
+  frame.hidden = false;
+  frame.contentWindow.revealWitnessInvitation(pendingWitnessReveal);
+  pendingWitnessReveal = null;
+}
 
 async function saveWitnessResponse(response, note) {
   if (!isWitnessGuest() || !token || !sbReady || witnessSavePending ||
@@ -352,6 +363,8 @@ function mountWitnessTicket() {
   frame.id = "witnessTicketFrame";
   frame.title = `Reservation and witness response for ${guest.name}`;
   frame.className = "witness-ticket-frame";
+  const alreadyAnswered = ["accepted", "declined"].includes(guest.rsvp_status);
+  frame.hidden = !alreadyAnswered;
   frame.addEventListener("load", () => {
     frame.contentWindow.initializeWitnessTicket({
       name: guest.name,
@@ -361,9 +374,12 @@ function mountWitnessTicket() {
       save: saveWitnessResponse,
       resize: height => { frame.style.height = `${height}px`; }
     });
+    frame.dataset.ready = "true";
+    if (pendingWitnessReveal) revealWitnessInvitation(pendingWitnessReveal.response);
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-reference-2";
-  section.classList.add("has-witness-ticket");
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-compact-3";
+  if (alreadyAnswered) section.classList.add("has-witness-ticket");
+  else section.querySelector(".rsvp-card > p").textContent = "Choose an answer to continue to your special invitation.";
   section.querySelector(".reservations-grid").prepend(frame);
 }
 
@@ -395,6 +411,10 @@ const ticketAnimation = {
 rsvpForm?.querySelectorAll('input[name="rsvpStatus"]').forEach(input => {
   input.addEventListener("change", () => {
     if (!input.checked || !ticketAnimation) return;
+    if (isWitnessGuest()) {
+      revealWitnessInvitation(input.value);
+      return;
+    }
     if (input.value === "accepted") ticketAnimation.reserve();
     if (input.value === "declined") ticketAnimation.decline();
     void submitRsvp(input.value);
