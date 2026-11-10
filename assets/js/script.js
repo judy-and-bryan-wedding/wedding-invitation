@@ -362,7 +362,7 @@ function mountWitnessTicket() {
       resize: height => { frame.style.height = `${height}px`; }
     });
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html";
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-reference-2";
   section.classList.add("has-witness-ticket");
   section.querySelector(".reservations-grid").prepend(frame);
 }
