@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reservation Ticket</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: #e7ece5; --shadow: #00000025;
+  --card-a: #f7f9f4; --card-b: #e8eee6; --card-line: #c3cec1; --ink: #1f2d36; --muted: #5d6963;
+  --opt-bg: #ffffff8c; --opt-line: #b9c6b7; --opt-on: #2f5d4a; --field-bg: #ffffff96;
+  --btn-bg: #2a2a33; --btn-ink: #fbf9f3;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --page: #16161c; --shadow: #00000070; --btn-bg: #f1eee6; --btn-ink: #1f1f27; color-scheme: dark;
+    --card-a: #212722; --card-b: #1a1f1b; --card-line: #3a463d; --ink: #eef1ea; --muted: #9ca79f; --opt-bg: #ffffff0d; --opt-line: #46524a; --opt-on: #9fd9bd; --field-bg: #ffffff0a; }
+}
+:root[data-theme="dark"] { --page: #16161c; --shadow: #00000070; --btn-bg: #f1eee6; --btn-ink: #1f1f27; color-scheme: dark;
+    --card-a: #212722; --card-b: #1a1f1b; --card-line: #3a463d; --ink: #eef1ea; --muted: #9ca79f; --opt-bg: #ffffff0d; --opt-line: #46524a; --opt-on: #9fd9bd; --field-bg: #ffffff0a; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { height: 100%; }
+html, body { margin: 0; }
+body { min-height: 100%; }
+body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; padding: 24px;
+  background: var(--page); font-family: "Montserrat", system-ui, sans-serif; overflow-x: hidden;
+}
+
+.ticket {
+  --stub-w: 150px; --notch: 11px; --mx: 50%; --my: 40%; --hue: 0deg;
+  position: relative; top: 0; width: min(100%, 620px); min-height: 210px; touch-action: pan-y;
+  filter: drop-shadow(0 0 var(--gb) var(--gc)) drop-shadow(0 2px 1px var(--shadow)) drop-shadow(0 10px 9px var(--shadow)) drop-shadow(0 30px 30px var(--shadow));
+  transition: transform .25s ease-out;
+}
+.ticket.on { animation: hover 3.5s ease-in-out infinite; }
+.ticket.on.accepted { animation: hover 3.5s ease-in-out infinite, glowIn .9s ease-out both, glow 2.8s ease-in-out .9s infinite; }
+@keyframes hover { 50% { top: -6px; scale: 1.01; } }
+
+.shape {
+  position: absolute; inset: 0; border-radius: 22px; overflow: hidden;
+  -webkit-mask:
+    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 0, #0000 97%, #000),
+    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 100%, #0000 97%, #000);
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 0, #0000 97%, #000),
+    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 100%, #0000 97%, #000);
+  mask-composite: intersect;
+}
+.plain {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, #fcfaf4 calc(100% - var(--stub-w)), #edefe5 0);
+  box-shadow: inset 0 0 0 1.5px #d9d3c2;
+}
+
+/* foil layer: revealed by a wavy water-style clip-path spreading from several points */
+.holo { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); -webkit-clip-path: inset(0 0 100% 0); }
+.bg { position: absolute; inset: 0; background-color: #fff; filter: url(#bump) hue-rotate(var(--hue)); }
+.holographic {
+  background-image:
+    linear-gradient(to bottom, #fe58, 90%, #0002),
+    conic-gradient(at var(--mx) var(--my), #ccc, #ff6bfe, #00f9f8, #ddd, #0081fd, #eef0bc, #0081fd, #ff6bfe, #0002, #0081fd, #ddd, #01fefb, #ccc);
+}
+.holographic::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 70% 20%, #f0f, #0000), repeating-radial-gradient(circle at 30% 80%, #fff, #f4a 48px, #eee 150px);
+  mix-blend-mode: color-burn;
+}
+.holographic::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, #f205, #f00, #0f0, #f205);
+  background-size: 100% 300%; mix-blend-mode: difference;
+  animation: bg-pos 3s ease-in-out infinite alternate;
+}
+@keyframes bg-pos { to { background-position: 0 500px; } }
+.tint {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(253,251,245,.84) calc(100% - var(--stub-w)), rgba(253,251,245,.66) 0);
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.7);
+}
+/* lighting: a soft pool of light that follows the pointer plus a prismatic streak */
+.sheen { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+  background:
+    radial-gradient(circle at var(--mx) var(--my), #fffe, #fff0 42%),
+    linear-gradient(105deg, transparent calc(var(--mx) - 20%), #fff8 var(--mx), transparent calc(var(--mx) + 20%)); }
+.glint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: color-dodge; opacity: .55;
+  background: radial-gradient(circle at var(--mx) var(--my), #7fe8ff88, #ff7bf044 25%, #0000 55%); }
+.ripples { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+.filter { position: absolute; width: 0; height: 0; }
+
+/* ticket design: one markup, three copies */
+.content {
+  --text: #2a2a33; --accent: #a9782f; --soft: #6b6a72;
+  position: absolute; inset: 0; display: grid; grid-template-columns: 1fr var(--stub-w); color: var(--text);
+}
+.content.flow { position: relative; opacity: 0; }
+.content.hv { --text: #1b1a2b; --accent: #6d4a12; --soft: #3d3b4d; }
+
+.main { padding: 26px 28px; }
+.stub { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 16px; }
+.stub::before {
+  content: ""; position: absolute; left: -1px; top: calc(var(--notch) + 8px); bottom: calc(var(--notch) + 8px); width: 2px;
+  background: repeating-linear-gradient(to bottom, rgba(42,42,51,.4) 0 4px, transparent 4px 9px);
+}
+.hv .stub::before { background: repeating-linear-gradient(to bottom, #fff 0 5px, transparent 5px 10px); filter: drop-shadow(0 0 1px rgba(60,30,120,.7)); }
+
+.label { font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin: 0; }
+.hv .label { font-weight: 600; }
+.divider { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+.divider::before, .divider::after { content: ""; height: 1.5px; flex: 1; background: linear-gradient(90deg, transparent, var(--accent)); }
+.divider::after { transform: scaleX(-1); }
+.divider i { width: 8px; height: 8px; flex: none; transform: rotate(45deg); background: var(--accent); }
+.hv .divider i { background: #3a2a8f; box-shadow: 0 0 0 1.5px #fff; }
+.stub .divider { width: 72%; margin: 2px 0; }
+
+h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem; margin: 6px 0 2px; font-weight: 500; }
+.hv h1, .hv .seat { font-weight: 600; }
+.seat { font-style: italic; margin: 6px 0 8px; }
+.note { font-size: .72rem; color: var(--soft); margin: 0; max-width: 40ch; line-height: 1.55; }
+.hv .note { font-weight: 500; }
+.number { font-size: 2.1rem; font-weight: 300; letter-spacing: .02em; margin: 0; }
+.hv .number { font-weight: 500; }
+
+.go {
+  display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer;
+  background: var(--btn-bg); color: var(--btn-ink); font: 500 .85rem "Montserrat", system-ui, sans-serif; letter-spacing: .04em;
+  padding: 13px 24px; border-radius: 999px; box-shadow: 0 6px 18px var(--shadow); transition: transform .2s;
+}
+.go:hover { transform: translateY(-2px); }
+.go:active { transform: scale(.97); }
+.go:focus-visible { outline: 3px solid #7a5bd6; outline-offset: 3px; }
+.go i { width: 9px; height: 9px; transform: rotate(45deg); background: linear-gradient(135deg, #ff6bfe, #0081fd, #00c9c8); }
+
+@media (max-width: 520px) {
+  .ticket { --stub-w: 112px; }
+  h1, .seat { font-size: 1.5rem; }
+  .number { font-size: 1.6rem; }
+  .main { padding: 20px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticket.on, .ticket.on.accepted, .holographic::after, .ticket.accepted .rim, .shape.thud, .rsvp.sweep::after { animation: none; }
+  .ticket.accepted { --gb: 14px; }
+  .stamp.inking { animation: none; opacity: .9; }
+  .pane { transition-duration: 0s !important; transition-delay: 0s !important; }
+}
+
+/* ---------- accepted: the ticket outline shines ---------- */
+@property --gb { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --gc { syntax: '<color>'; inherits: false; initial-value: transparent; }
+@property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.ticket.accepted { --gc: rgba(255, 226, 150, .85); }
+@keyframes glowIn { from { --gb: 0px; } to { --gb: 12px; } }
+@keyframes glow { 0%, 100% { --gb: 12px; } 50% { --gb: 26px; } }
+.rim {
+  --ang: 0deg;
+  position: absolute; inset: 0; border-radius: 22px; padding: 2.5px; pointer-events: none; opacity: 0; transition: opacity .7s;
+  background: conic-gradient(from var(--ang), rgba(255,236,190,.45) 0 50%, #ffe9a8 63%, #fff 72%, #8fe9ff 81%, #ff8cf0 90%, rgba(255,236,190,.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+}
+.ticket.accepted .rim { opacity: 1; animation: spin 3.2s linear infinite; }
+@keyframes spin { to { --ang: 360deg; } }
+
+/* ---------- rubber stamp ---------- */
+.stamp-wrap { position: absolute; z-index: 6; left: calc((100% - var(--stub-w)) / 2); top: 54%; translate: -50% -50%; pointer-events: none; }
+.stamp {
+  display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 22px 8px; white-space: nowrap;
+  border: 3px double currentColor; border-radius: 9px; color: #1f6a45; rotate: -11deg; opacity: 0;
+  mix-blend-mode: multiply; filter: url(#ink); text-transform: uppercase;
+}
+.stamp span { font: 600 1.7rem/1 "Montserrat", system-ui, sans-serif; letter-spacing: .2em; padding-left: .2em; }
+.stamp small { font: 600 .5rem/1 "Montserrat", system-ui, sans-serif; letter-spacing: .32em; padding-left: .32em; }
+.stamp.declined { color: #a3302d; rotate: -7deg; }
+.stamp.inking { animation: stamp .6s cubic-bezier(.2, .8, .25, 1) forwards; }
+@keyframes stamp { 0% { opacity: 0; scale: 2.8; } 50% { opacity: .95; scale: .93; } 70% { scale: 1.035; } 100% { opacity: .9; scale: 1; } }
+.shape.thud { animation: thud .38s ease-out; }
+@keyframes thud { 40% { translate: 0 3px; scale: .994; } 100% { translate: 0 0; scale: 1; } }
+@media (max-width: 520px) { .stamp span { font-size: 1.15rem; } .stamp { padding: 7px 14px 6px; } }
+
+/* ---------- RSVP card ---------- */
+.rsvp {
+  position: relative; width: min(100%, 620px); display: grid; overflow: hidden; color: var(--ink);
+  padding: 26px clamp(14px, 4vw, 22px) 24px; border: 1px solid var(--card-line); border-radius: 28px;
+  background: linear-gradient(180deg, var(--card-a), var(--card-b));
+  transition: border-color .8s, box-shadow .8s;
+}
+.rsvp.witness { border-color: #b7aee6; box-shadow: 0 0 0 1px rgba(140, 200, 255, .4), 0 14px 40px -16px rgba(150, 110, 255, .5); }
+.rsvp::after { /* one soft iridescent pass whenever the question changes */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: inherit;
+  background: linear-gradient(105deg, transparent 32%, rgba(127,232,255,.32) 42%, rgba(255,123,240,.3) 50%, rgba(255,233,168,.36) 58%, transparent 68%) 120% 0 / 260% 100% no-repeat;
+}
+.rsvp.sweep::after { animation: sweep 1.5s ease-in-out; }
+@keyframes sweep { 0% { opacity: 0; background-position: 120% 0; } 15%, 85% { opacity: 1; } 100% { opacity: 0; background-position: -20% 0; } }
+
+.pane { grid-area: 1 / 1; text-align: center; }
+.pane.plain { transition: opacity .7s ease, transform .7s ease, filter .7s ease, visibility 0s; }
+.pane.witness { opacity: 0; transform: translateY(14px) scale(.985); filter: blur(8px); visibility: hidden;
+  transition: opacity .7s ease, transform .7s ease, filter .7s ease, visibility 0s linear .7s; }
+.rsvp.witness .pane.plain { opacity: 0; transform: translateY(-14px) scale(.985); filter: blur(8px); visibility: hidden;
+  transition: opacity .6s ease, transform .6s ease, filter .6s ease, visibility 0s linear .6s; }
+.rsvp.witness .pane.witness { opacity: 1; transform: none; filter: none; visibility: visible;
+  transition: opacity .7s ease .25s, transform .7s ease .25s, filter .7s ease .25s, visibility 0s; }
+
+.pane h2 { font: 500 2.25rem/1.1 "Cormorant Garamond", Georgia, serif; margin: 0 0 6px; }
+.hint { font-size: .74rem; color: var(--muted); margin: 0 0 14px; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.opt { position: relative; display: block; cursor: pointer; }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.face {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; padding: 10px 10px 14px;
+  border: 1px solid var(--opt-line); border-radius: 18px; background: var(--opt-bg);
+  transition: border-color .25s, background .25s, box-shadow .25s, opacity .3s;
+}
+.ic { width: 26px; height: 26px; margin-bottom: 6px; display: grid; place-items: center; border: 1px solid var(--opt-line); border-radius: 50%; font-size: .8rem; color: var(--muted); transition: background .25s, color .25s, border-color .25s; }
+.face b { font: 600 1.3rem/1.15 "Cormorant Garamond", Georgia, serif; }
+.face em { font-style: normal; font-size: .82rem; color: var(--muted); }
+.opt input:checked + .face { border-color: var(--opt-on); box-shadow: 0 0 0 1px var(--opt-on); background: color-mix(in srgb, var(--opt-on) 9%, var(--opt-bg)); }
+.opt input:checked + .face .ic { background: var(--opt-on); border-color: var(--opt-on); color: var(--card-a); }
+.opt input:focus-visible + .face { outline: 3px solid #7a5bd6; outline-offset: 2px; }
+.field {
+  display: block; width: 100%; min-height: 84px; resize: vertical; padding: 12px 14px; text-align: left;
+  border: 1px solid var(--opt-line); border-radius: 14px; background: var(--field-bg); color: var(--ink); font: 400 .95rem/1.45 "Montserrat", system-ui, sans-serif;
+}
+.field::placeholder { color: var(--muted); }
+.field:focus-visible { outline: 3px solid #7a5bd6; outline-offset: 2px; }
+.act { display: grid; margin-top: 12px; }
+.act > * { grid-area: 1 / 1; }
+.submit {
+  border: 0; cursor: pointer; padding: 14px; border-radius: 999px; background: var(--btn-bg); color: var(--btn-ink);
+  font: 500 .85rem "Montserrat", system-ui, sans-serif; letter-spacing: .05em; transition: opacity .35s, transform .2s;
+}
+.submit:disabled { opacity: .4; cursor: not-allowed; }
+.submit:not(:disabled):active { transform: scale(.98); }
+.submit:focus-visible { outline: 3px solid #7a5bd6; outline-offset: 3px; }
+.status { align-self: center; margin: 0; opacity: 0; transition: opacity .7s .2s; font: italic 500 1.2rem/1.35 "Cormorant Garamond", Georgia, serif; }
+.rsvp.locked .submit { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .35s, visibility 0s .35s; }
+.rsvp.locked .status { opacity: 1; }
+.rsvp.locked .opt { pointer-events: none; }
+.rsvp.locked input:not(:checked) + .face { opacity: .45; }
+@media (max-width: 520px) { .pane h2 { font-size: 1.9rem; } .face b { font-size: 1.15rem; } }
+</style>
+<style>
+/* Embed the supplied design without inheriting the invitation's ticket styles. */
+html { height: auto; }
+body { min-height: 0; justify-content: flex-start; background: transparent; padding: 24px 12px 32px; }
+.go { display: none; }
+.pane.plain { position: relative; inset: auto; background: none; box-shadow: none; }
+.pane { min-width: 0; }
+.content .main, .content .stub { min-width: 0; }
+.act .status:not(:empty) { grid-area: auto; margin-top: 10px; opacity: 1; }
+.rsvp.locked .submit { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .stamp.inking { animation: none; opacity: .9; }
+  .ticket.on, .ticket.on.accepted, .holographic::after,
+  .ticket.accepted .rim, .shape.thud, .rsvp.sweep::after { animation: none; }
+}
+</style>
+</head>
+<body>
+<button class="go" id="go" type="button" aria-pressed="false"><i></i><span id="goText">Reveal hologram</span></button>
+
+<div class="ticket" id="ticket">
+  <div class="shape" id="shape">
+    <div class="plain"></div>
+    <div class="holo" id="holo">
+      <div class="bg holographic"></div>
+      <div class="tint"></div>
+      <div class="sheen"></div>
+      <div class="glint"></div>
+    </div>
+    <div class="rim"></div>
+  </div>
+
+  <svg class="filter" aria-hidden="true">
+    <filter id="bump">
+      <feTurbulence result="noise" numOctaves="3" baseFrequency="0.7" type="fractalNoise"></feTurbulence>
+      <feSpecularLighting in="noise" result="specular" lighting-color="#fffffc" specularExponent="25" specularConstant="0.8" surfaceScale="0.15">
+        <fePointLight id="plight" z="210" y="100" x="100"></fePointLight>
+      </feSpecularLighting>
+      <feComposite result="noise2" operator="in" in="specular" in2="SourceGraphic"></feComposite>
+      <feBlend mode="screen" in2="noise2" in="SourceGraphic"></feBlend>
+    </filter>
+    <filter id="ink" x="-5%" y="-10%" width="110%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="n"></feTurbulence>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -4 0 0 0 2.9" result="speck"></feColorMatrix>
+      <feComposite in="SourceGraphic" in2="speck" operator="in" result="inked"></feComposite>
+      <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" seed="9" result="w"></feTurbulence>
+      <feDisplacementMap in="inked" in2="w" scale="2.4" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+    </filter>
+  </svg>
+
+  <div class="content flow" id="content">
+    <div class="main">
+      <p class="label">Reservation details</p>
+      <h1>Your Seat Is Reserved</h1>
+      <div class="divider"><i></i></div>
+      <p class="label">Reception seating</p>
+      <p class="seat">To be announced</p>
+      <p class="note">Keep this invitation link private. Your table assignment will appear here once finalized.</p>
+    </div>
+    <div class="stub">
+      <p class="label">Reservation no.</p>
+      <p class="number">R-07</p>
+      <div class="divider"><i></i></div>
+      <p class="label">Private invitation</p>
+    </div>
+  </div>
+  <div class="stamp-wrap" aria-hidden="true">
+    <div class="stamp" id="stamp"><span id="stampWord">Reserved</span><small id="stampSub">Witness · Confirmed</small></div>
+  </div>
+</div>
+
+<section class="rsvp" id="rsvp">
+  <div class="pane plain">
+    <h2>Will You Join Us?</h2>
+    <p class="hint">Choose carefully. Your submitted response will be saved as final.</p>
+    <div class="opts" role="radiogroup" aria-label="Attendance">
+      <label class="opt"><input type="radio" name="join" value="accept"><span class="face"><span class="ic">✓</span><b>Joyfully Accept</b><em>We will be there</em></span></label>
+      <label class="opt"><input type="radio" name="join" value="decline"><span class="face"><span class="ic">×</span><b>Regretfully Decline</b><em>We cannot attend</em></span></label>
+    </div>
+    <textarea class="field" rows="3" maxlength="500" placeholder="Leave a message for the couple or share why you cannot attend." aria-label="Message for the couple"></textarea>
+  </div>
+
+  <div class="pane witness">
+    <h2>Will You Be Our Witness?</h2>
+    <p class="hint">Choose carefully. Your submitted response will be saved as final.</p>
+    <div class="opts" role="radiogroup" aria-label="Witness response">
+      <label class="opt"><input type="radio" name="witness" value="accept"><span class="face"><span class="ic">✓</span><b>Gladly Accept</b><em>It would be an honor</em></span></label>
+      <label class="opt"><input type="radio" name="witness" value="decline"><span class="face"><span class="ic">×</span><b>Regretfully Decline</b><em>I am unable to serve</em></span></label>
+    </div>
+    <textarea class="field" id="wmsg" rows="3" maxlength="500" placeholder="Leave a message for the couple." aria-label="Message for the couple"></textarea>
+    <div class="act">
+      <button class="submit" id="submit" type="button" disabled>Submit response</button>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<script>
+(() => {
+  const t = document.getElementById('ticket'), holo = document.getElementById('holo'),
+        shape = document.getElementById('shape'), src = document.getElementById('content'),
+        btn = document.getElementById('go'), label = document.getElementById('goText'),
+        plight = document.getElementById('plight'),
+        rsvp = document.getElementById('rsvp'), submit = document.getElementById('submit'), status = document.getElementById('status'),
+        wmsg = document.getElementById('wmsg'), stampEl = document.getElementById('stamp'), stampWord = document.getElementById('stampWord'),
+        stampSub = document.getElementById('stampSub');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const HIDDEN = 'inset(0 0 100% 0)', SPREAD = 1500, STAGGER = 700, TAU = Math.PI * 2, N = 48;
+
+  const copy = extra => { const c = src.cloneNode(true); c.removeAttribute('id'); c.classList.remove('flow'); if (extra) c.classList.add(extra); c.setAttribute('aria-hidden', 'true'); return c; };
+  shape.insertBefore(copy(), holo);
+  // the foil copy carries the revealed message; same layout and size as the plain ticket
+  const hvCopy = copy('hv');
+  hvCopy.querySelectorAll('.main .label')[1].textContent = 'Our honored witness';
+  hvCopy.querySelector('.seat').textContent = 'Witness to Our Wedding';
+  hvCopy.querySelector('.note').textContent = 'We are honored for you to be our witness at the wedding. With heartfelt gratitude, we thank you.';
+  holo.appendChild(hvCopy);
+  const cv = document.createElement('canvas');
+  cv.className = 'ripples';
+  shape.appendChild(cv);
+  const ctx = cv.getContext('2d');
+
+  let on = false, busy = false, drops = [], total = 0, W = 0, H = 0, lastPtr = -9999;
+  const setClip = v => { holo.style.clipPath = v; holo.style.webkitClipPath = v; };
+  const ease = u => 1 - Math.pow(1 - u, 2.4);
+
+  /* ---------- holographic lighting ---------- */
+  function light(px, py) {
+    const r = t.getBoundingClientRect(), x = px / r.width, y = py / r.height;
+    t.style.setProperty('--mx', (x * 100) + '%');
+    t.style.setProperty('--my', (y * 100) + '%');
+    t.style.setProperty('--hue', ((x - .5) * 70) + 'deg');
+    plight.setAttribute('x', px); plight.setAttribute('y', py);
+    if (on && !busy) t.style.transform = `perspective(900px) rotateX(${(.5 - y) * 9}deg) rotateY(${(x - .5) * 12}deg)`;
+  }
+  t.addEventListener('pointermove', e => {
+    const r = t.getBoundingClientRect();
+    lastPtr = performance.now();
+    light(e.clientX - r.left, e.clientY - r.top);
+  });
+  t.addEventListener('pointerleave', () => { if (!busy) t.style.transform = ''; });
+  // idle sweep: when nobody is touching the ticket, a light glides across the foil
+  (function idle(now) {
+    if (on && !reduce.matches && now - lastPtr > 1500) {
+      const r = t.getBoundingClientRect();
+      light(r.width * (.5 + .42 * Math.sin(now / 1100)), r.height * (.5 + .35 * Math.sin(now / 1700 + 1)));
+    }
+    requestAnimationFrame(idle);
+  })(0);
+
+  /* ---------- chipping reveal: the plain ticket cracks, glows, and breaks away piece by piece ---------- */
+  const COLS = 16, ROWS = 7, CHIP = 240, SPAN = 1900;
+  let cells = [];
+  const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+  function makeCells(w, h) {
+    const cw = w / COLS, ch = h / ROWS, V = [], out = [];
+    for (let j = 0; j <= ROWS; j++) { V[j] = []; for (let i = 0; i <= COLS; i++) {
+      V[j][i] = [i * cw + (i === 0 || i === COLS ? 0 : (Math.random() - .5) * cw * .7),
+                 j * ch + (j === 0 || j === ROWS ? 0 : (Math.random() - .5) * ch * .7)];
+    } }
+    for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
+      const a = V[j][i], b = V[j][i + 1], c = V[j + 1][i + 1], d = V[j + 1][i];
+      (Math.random() < .5 ? [[a, b, c], [a, c, d]] : [[a, b, d], [b, c, d]]).forEach(pts => {
+        const cross = (pts[1][0] - pts[0][0]) * (pts[2][1] - pts[0][1]) - (pts[1][1] - pts[0][1]) * (pts[2][0] - pts[0][0]);
+        if (cross < 0) pts.reverse(); // same winding everywhere so overlapping chips never cancel out
+        out.push({ pts, qi: i, qj: j, cx: (pts[0][0] + pts[1][0] + pts[2][0]) / 3, cy: (pts[0][1] + pts[1][1] + pts[2][1]) / 3,
+                   t: Infinity, vx: (Math.random() - .5) * 170, vy: -50 + Math.random() * 70, vr: (Math.random() - .5) * 9 });
+      });
+    }
+    out.forEach(c => { c.nb = []; out.forEach((m, k) => { if (m !== c && Math.abs(m.qi - c.qi) <= 1 && Math.abs(m.qj - c.qj) <= 1) c.nb.push([k, 50 + Math.random() * 140]); }); });
+    // chipping starts at a few random points near the middle, then keeps breaking outward
+    const mid = out.map((c, k) => k).filter(k => Math.abs(out[k].cx - w / 2) < w * .25 && Math.abs(out[k].cy - h / 2) < h * .3);
+    for (let n = 0; n < 3; n++) out[mid[Math.floor(Math.random() * mid.length)]].t = Math.random() * 200;
+    const seen = new Set();
+    for (let n = 0; n < out.length; n++) {
+      let best = -1; out.forEach((c, k) => { if (!seen.has(k) && c.t < Infinity && (best < 0 || c.t < out[best].t)) best = k; });
+      if (best < 0) break; seen.add(best);
+      out[best].nb.forEach(([k, wt]) => { if (out[best].t + wt < out[k].t) out[k].t = out[best].t + wt; });
+    }
+    const mx = Math.max(...out.map(c => c.t));
+    out.forEach(c => { c.t = c.t / mx * SPAN; });
+    total = SPAN + 900;
+    return out;
+  }
+  const poly = (pts, cx, cy, s) => 'M' + pts.map((p, i) => (i ? 'L' : '') + (cx + (p[0] - cx) * s).toFixed(1) + ' ' + (cy + (p[1] - cy) * s).toFixed(1)).join('') + 'Z';
+  const trace = (pts, ox, oy) => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0] + ox, p[1] + oy) : ctx.moveTo(p[0] + ox, p[1] + oy)); ctx.closePath(); };
+
+  function paint(ms, fx) {
+    ctx.clearRect(0, 0, W, H);
+    let clip = '';
+    cells.forEach(c => {
+      const u = clamp((ms - c.t) / CHIP, 0, 1);
+      if (u > 0) clip += poly(c.pts, c.cx, c.cy, .55 + .52 * ease(u));
+      if (!fx) return;
+      const dt = ms - c.t;
+      if (dt < 0 && dt > -340) { // hairline crack with light leaking through just before it breaks
+        trace(c.pts, 0, 0); ctx.shadowBlur = 10; ctx.shadowColor = '#ffe9a8';
+        ctx.strokeStyle = `rgba(255,246,210,${.95 * (1 + dt / 340)})`; ctx.lineWidth = 1.3; ctx.stroke(); ctx.shadowBlur = 0;
+      } else if (dt >= 0 && dt < 420) { // burst of light where the piece came off
+        const a = 1 - dt / 420;
+        trace(c.pts, 0, 0); ctx.fillStyle = `rgba(255,255,255,${a * .75})`; ctx.fill();
+        ctx.shadowBlur = 14; ctx.shadowColor = '#9fe3ff'; ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 1.6; ctx.stroke(); ctx.shadowBlur = 0;
+      }
+      if (dt >= 0 && dt < 850) { // the broken chip tumbles away
+        const age = dt / 1000, al = 1 - dt / 850;
+        ctx.save(); ctx.translate(c.cx + c.vx * age, c.cy + c.vy * age + 700 * age * age); ctx.rotate(c.vr * age);
+        trace(c.pts, -c.cx, -c.cy); ctx.fillStyle = `rgba(252,250,244,${al})`; ctx.fill();
+        ctx.strokeStyle = `rgba(217,211,194,${al})`; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+      }
+    });
+    setClip(clip ? `path('${clip}')` : HIDDEN);
+  }
+
+  /* ---------- RSVP: the question changes with the hologram, the answer decides how the ticket ends ---------- */
+  let choice = null, final = false, swapT = 0, saving = false, initialized = false;
+  let saveResponse = null, reportHeight = null;
+  const plainPane = rsvp.querySelector('.pane.plain');
+  const witnessPane = rsvp.querySelector('.pane.witness');
+  const joinOpts = [...rsvp.querySelectorAll('input[name="join"]')];
+  plainPane.inert = true;
+  witnessPane.inert = true;
+  // The first answer reveals the witness invitation; only its final submit is persisted.
+  plainPane.querySelector('.hint').textContent = 'Choose an answer to continue to your special invitation.';
+  joinOpts.forEach(input => input.addEventListener('change', () => {
+    if (!input.checked || on || busy || final || !initialized) return;
+    wmsg.value = plainPane.querySelector('textarea').value;
+    plainPane.inert = true;
+    toggle(() => {
+      witnessPane.inert = false;
+      witnessPane.querySelector('h2').focus({ preventScroll: true });
+    });
+  }));
+  witnessPane.querySelector('h2').tabIndex = -1;
+  const wOpts = [...rsvp.querySelectorAll('input[name="witness"]')];
+  const setLabel = () => { label.textContent = final ? 'Reset demo' : on ? 'Back to plain ticket' : 'Reveal hologram'; btn.setAttribute('aria-pressed', on); };
+  const syncSubmit = () => { submit.disabled = !initialized || !choice || busy || saving || final; };
+  const sweep = () => { if (reduce.matches) return; rsvp.classList.remove('sweep'); void rsvp.offsetWidth; rsvp.classList.add('sweep'); };
+  const swap = v => {
+    plainPane.inert = v || !initialized;
+    witnessPane.inert = !v || busy;
+    if (rsvp.classList.contains('witness') === v) return;
+    rsvp.classList.toggle('witness', v);
+    if (v) {
+      src.querySelectorAll('.main .label')[1].textContent = 'Our honored witness';
+      src.querySelector('.seat').textContent = 'Witness to Our Wedding';
+      src.querySelector('.note').textContent = hvCopy.querySelector('.note').textContent;
+    }
+    sweep();
+  };
+  rsvp.addEventListener('animationend', e => { if (e.animationName === 'sweep') rsvp.classList.remove('sweep'); });
+  shape.addEventListener('animationend', e => { if (e.animationName === 'thud') shape.classList.remove('thud'); });
+  wOpts.forEach(i => i.addEventListener('change', () => { choice = i.value; syncSubmit(); }));
+
+  function stamp(kind) {
+    const ok = kind === 'reserved';
+    stampWord.textContent = ok ? 'Reserved' : 'Declined';
+    stampSub.textContent = ok ? 'Witness · Confirmed' : 'With regrets';
+    stampEl.className = 'stamp ' + kind;
+    void stampEl.offsetWidth;
+    stampEl.classList.add('inking');
+    if (!reduce.matches) setTimeout(() => { shape.classList.remove('thud'); void shape.offsetWidth; shape.classList.add('thud'); }, 300); // the paper takes the hit
+  }
+
+  function showFinal(result, animate) {
+    choice = result.status === 'accepted' ? 'accept' : 'decline';
+    final = true;
+    wmsg.value = result.note || '';
+    wmsg.readOnly = true;
+    wOpts.forEach(input => { input.checked = input.value === choice; input.disabled = true; });
+    rsvp.classList.add('locked');
+    swap(true);
+    status.textContent = choice === 'accept'
+      ? 'Saved. Thank you, we are honored to have you beside us.'
+      : 'Saved. Thank you for letting us know. You will be in our hearts.';
+    syncSubmit();
+    if (choice === 'accept') {
+      on = true;
+      setClip('none');
+      t.classList.add('on', 'accepted');
+      setTimeout(() => stamp('reserved'), animate && !reduce.matches ? 500 : 0);
+    } else if (animate && on) {
+      toggle(() => stamp('declined'));
+    } else {
+      on = false;
+      setClip(HIDDEN);
+      t.classList.remove('on', 'accepted');
+      stamp('declined');
+    }
+  }
+
+  submit.addEventListener('click', async () => {
+    if (!choice || busy || saving || final || !saveResponse) return;
+    saving = true;
+    wOpts.forEach(input => { input.disabled = true; });
+    wmsg.readOnly = true;
+    rsvp.setAttribute('aria-busy', 'true');
+    status.textContent = 'Saving your response...';
+    syncSubmit();
+    try {
+      const result = await saveResponse(choice === 'accept' ? 'accepted' : 'declined', wmsg.value.trim());
+      if (!result || !['accepted', 'declined'].includes(result.status)) throw new Error('Response was not saved.');
+      showFinal(result, true);
+    } catch (error) {
+      status.textContent = 'We could not save your response. Please try again.';
+      wOpts.forEach(input => { input.disabled = false; });
+      wmsg.readOnly = false;
+    } finally {
+      saving = false;
+      rsvp.removeAttribute('aria-busy');
+      syncSubmit();
+    }
+  });
+
+  // Only the parent invitation supplies guest data and the existing private RSVP save.
+  window.initializeWitnessTicket = options => {
+    if (initialized) return;
+    initialized = true;
+    saveResponse = options.save;
+    reportHeight = options.resize;
+    document.querySelectorAll('.number').forEach(el => { el.textContent = options.reservationNumber || 'Unassigned'; });
+    document.title = 'Reservation for ' + options.name;
+    t.setAttribute('aria-label', 'Reservation for ' + options.name);
+    plainPane.inert = false;
+    if (['accepted', 'declined'].includes(options.status)) {
+      showFinal({ status: options.status, note: options.note }, false);
+    }
+    syncSubmit();
+    resize();
+  };
+  function resize() {
+    // Include whichever ticket copy needs more room after fonts or viewport change.
+    src.style.minHeight = '';
+    src.style.minHeight = Math.ceil(Math.max(hvCopy.scrollHeight, shape.querySelector('.content').scrollHeight)) + 'px';
+    reportHeight?.(Math.ceil(document.body.getBoundingClientRect().height));
+  }
+  new ResizeObserver(resize).observe(document.body);
+  document.fonts.ready.then(resize);
+
+  function toggle(done) {
+    if (busy) return;
+    busy = true;
+    on = !on;
+    setLabel(); syncSubmit();
+    t.classList.toggle('on', on);
+    t.style.transform = '';
+    clearTimeout(swapT);
+    if (on) swapT = setTimeout(() => swap(true), reduce.matches ? 0 : 900);          // question changes mid-reveal
+    else if (!final) swapT = setTimeout(() => swap(false), reduce.matches ? 0 : 150);
+
+    const r = t.getBoundingClientRect();
+    W = r.width; H = r.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (on) cells = makeCells(W, H);
+
+    const finish = () => { setClip(on ? 'none' : HIDDEN); ctx.clearRect(0, 0, W, H); busy = false; syncSubmit(); if (done) done(); };
+    if (reduce.matches || !cells.length) return finish();
+
+    const dur = on ? total : 1000, t0 = performance.now();
+    (function frame(now) {
+      const u = Math.min((now - t0) / dur, 1);
+      paint(on ? u * total : (1 - u) * SPAN, on);
+      if (u < 1) requestAnimationFrame(frame); else finish();
+    })(t0);
+  }
+
+})();
+</script>
+</body>
+</html>

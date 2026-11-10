@@ -6201,3 +6201,17 @@ main > .section{
   #selfie .face-filter-option span{font-size:14px}
   #selfie .face-filter-none{min-height:34px}
 }
+/* The reference ticket lives in its own document to preserve its exact styles. */
+#reservations.has-witness-ticket { --phone-tab-scale: 1 !important; }
+#reservations.has-witness-ticket #fit,
+#reservations.has-witness-ticket .rsvp-card { display: none; }
+#reservations .witness-ticket-frame {
+  display: block;
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: 668px;
+  height: 760px;
+  margin-inline: auto;
+  border: 0;
+  background: transparent;
+}

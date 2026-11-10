@@ -301,6 +301,72 @@ let guest = {
 const rsvpForm = $("rsvpForm");
 const rsvpNote = $("rsvpNote");
 const rsvpStatus = $("rsvpStatus");
+const witnessGuestNames = new Set([
+  "spencer sze", "marc andrew tan", "felicidad abizo", "lorna gotardo"
+]);
+const isWitnessGuest = () => witnessGuestNames.has(
+  String(guest.name || "").trim().replace(/\s+/g, " ").toLowerCase()
+);
+let witnessSavePending = false;
+
+async function saveWitnessResponse(response, note) {
+  if (!isWitnessGuest() || !token || !sbReady || witnessSavePending ||
+      !["accepted", "declined"].includes(response) || note.length > 500) {
+    throw new Error("Unable to save witness response.");
+  }
+  if (["accepted", "declined"].includes(guest.rsvp_status)) {
+    return { status: guest.rsvp_status, note: guest.rsvp_note };
+  }
+  witnessSavePending = true;
+  try {
+    const { data, error } = await sb.rpc("submit_guest_rsvp", {
+      p_invite_token: token, p_status: response, p_note: note || null
+    });
+    if (error) throw error;
+    if (data === true) {
+      guest.rsvp_status = response;
+      guest.rsvp_note = note;
+    } else {
+      // A different tab may already have saved the final answer.
+      const { data: rows, error: readError } = await sb.rpc("get_guest_by_invite_token", {
+        p_invite_token: token
+      });
+      const saved = Array.isArray(rows) ? rows[0] : rows;
+      if (readError || !saved || !["accepted", "declined"].includes(saved.rsvp_status)) {
+        throw readError || new Error("Response was not saved.");
+      }
+      guest.rsvp_status = saved.rsvp_status;
+      guest.rsvp_note = saved.rsvp_note || "";
+    }
+    setRsvpFormFinal(true);
+    return { status: guest.rsvp_status, note: guest.rsvp_note };
+  } finally {
+    witnessSavePending = false;
+  }
+}
+
+function mountWitnessTicket() {
+  if (!isWitnessGuest() || $("witnessTicketFrame")) return;
+  const section = $("reservations");
+  const frame = document.createElement("iframe");
+  frame.id = "witnessTicketFrame";
+  frame.title = `Reservation and witness response for ${guest.name}`;
+  frame.className = "witness-ticket-frame";
+  frame.addEventListener("load", () => {
+    frame.contentWindow.initializeWitnessTicket({
+      name: guest.name,
+      reservationNumber: guest.reservation_number,
+      status: guest.rsvp_status,
+      note: guest.rsvp_note,
+      save: saveWitnessResponse,
+      resize: height => { frame.style.height = `${height}px`; }
+    });
+  }, { once: true });
+  frame.src = "assets/animations/witness-reservation-ticket.html";
+  section.classList.add("has-witness-ticket");
+  section.querySelector(".reservations-grid").prepend(frame);
+}
+
 const ticketAnimation = {
   play: () => $("btn")?.click(),
   reserve: (animate = true) => {
@@ -353,6 +419,7 @@ function setRsvpFormFinal(isFinal) {
 
 function setRsvpUI() {
   if (!rsvpForm) return;
+  if (isWitnessGuest()) return;
   const selectedResponse = ["accepted", "declined"].includes(guest.rsvp_status)
     ? guest.rsvp_status
     : "";
@@ -470,6 +537,7 @@ async function loadGuest() {
 }
 
 function setGuestUI() {
+  mountWitnessTicket();
   const guestName = $("guestName");
   const overlayGuestName = $("overlayGuestName");
   const guestMessage = $("guestMessage");
