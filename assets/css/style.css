@@ -6201,3 +6201,29 @@ main > .section{
   #selfie .face-filter-option span{font-size:14px}
   #selfie .face-filter-none{min-height:34px}
 }
+#reservations.witness-holo-mode .ticket-animation-stage{display:none}
+#reservations.witness-holo-mode .witness-holo-ticket{display:block}
+.witness-holo-ticket{display:none;width:min(100%,620px);margin:auto;perspective:1000px}
+.witness-holo-ticket-inner{position:relative;display:grid;grid-template-columns:1fr 112px;min-height:190px;overflow:hidden;border-radius:20px;color:#29283a;background:linear-gradient(105deg,#fcfaf4 0 78%,#e9ecdf 78%);box-shadow:0 18px 50px #16182b32,inset 0 0 0 1px #ddd7c8;transition:transform .5s,filter .5s}
+.witness-holo-copy,.witness-holo-stub{z-index:1;display:flex;flex-direction:column;justify-content:center;padding:22px 28px}
+.witness-holo-copy small,.witness-holo-stub small,.witness-holo-stub span{font:500 9px Montserrat,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#84652e}
+.witness-holo-copy strong{margin:9px 0;font:500 clamp(25px,5vw,36px) 'Cormorant Garamond',Georgia,serif}
+.witness-holo-copy span{font:italic 14px 'Cormorant Garamond',Georgia,serif;color:#696875}
+.witness-holo-stub{align-items:center;text-align:center;padding:12px;border-left:1px dashed #aaa99f}
+.witness-holo-stub strong{margin:9px 0;font:300 26px Montserrat,sans-serif}
+.witness-holo-stub span{font-size:7px}
+.witness-holo-foil{position:absolute;inset:0;opacity:0;pointer-events:none;background:conic-gradient(at 55% 40%,#ffb9f5,#90faff,#fff4b1,#75a7ff,#ffb9f5);mix-blend-mode:color;transition:opacity 1s}
+.witness-holo-ticket.is-revealing .witness-holo-ticket-inner{animation:witness-ticket-reveal 1.4s cubic-bezier(.2,.75,.25,1) both}
+.witness-holo-ticket.is-holo .witness-holo-foil{opacity:.62;animation:witness-foil 3s ease-in-out infinite alternate}
+@keyframes witness-ticket-reveal{0%{transform:rotateY(-18deg) scale(.94);filter:brightness(1)}50%{filter:brightness(1.5)}100%{transform:rotateY(0) scale(1);filter:brightness(1)}}
+@keyframes witness-foil{to{filter:hue-rotate(90deg);opacity:.8}}
+.witness-holo-ticket.is-accepted .witness-holo-ticket-inner{animation:witness-glow 2s ease-in-out infinite alternate}
+@keyframes witness-glow{to{box-shadow:0 0 30px #fff0a8,0 0 65px #8deaff,inset 0 0 0 2px white}}
+.witness-holo-stamp{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-10deg) scale(2);opacity:0;border:3px double #1f6a45;border-radius:8px;padding:8px 18px;color:#1f6a45;font:700 22px Montserrat,sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.witness-holo-stamp.declined{color:#a3302d;border-color:#a3302d}
+.witness-holo-stamp.is-stamped{animation:witness-stamp .65s cubic-bezier(.2,.8,.25,1) forwards}
+@keyframes witness-stamp{50%{opacity:.95;transform:translate(-50%,-50%) rotate(-10deg) scale(.9)}100%{opacity:.92;transform:translate(-50%,-50%) rotate(-10deg) scale(1)}}
+#reservations.witness-holo-mode .rsvp-card{border-color:#b7aee6;box-shadow:0 0 0 1px #8cc8ff66,0 14px 40px -16px #966eff66}
+#reservations.witness-holo-mode .rsvp-card h2{font-family:'Cormorant Garamond',Georgia,serif;font-size:2.25rem}
+@media(max-width:520px){.witness-holo-ticket-inner{grid-template-columns:1fr 90px;min-height:160px}.witness-holo-copy{padding:16px}.witness-holo-stub{padding:8px}.witness-holo-stub strong{font-size:20px}}
+@media(prefers-reduced-motion:reduce){.witness-holo-ticket *{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}

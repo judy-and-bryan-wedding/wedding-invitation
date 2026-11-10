@@ -301,6 +301,30 @@ let guest = {
 const rsvpForm = $("rsvpForm");
 const rsvpNote = $("rsvpNote");
 const rsvpStatus = $("rsvpStatus");
+const witnessHoloNames = new Set(["spencer sze", "marc andrew tan", "felicidad abizo", "lorna gotardo"]);
+let isWitnessHoloGuest = false;
+function revealWitnessHologram(response) {
+  const section = $("reservations"), ticket = $("witnessHoloTicket"), heading = $("rsvpHeading"), prompt = $("rsvpPrompt");
+  if (!section || !ticket) return;
+  section.classList.add("witness-holo-mode");
+  ticket.setAttribute("aria-hidden", "false");
+  heading.textContent = "Will You Be Our Witness?";
+  prompt.textContent = "Your answer will be saved as final. Thank you for considering this honor.";
+  ticket.classList.remove("is-revealing");
+  void ticket.offsetWidth;
+  ticket.classList.add("is-revealing");
+  window.setTimeout(() => ticket.classList.add("is-holo"), 850);
+  if (response === "accepted") ticket.classList.add("is-accepted");
+}
+function stampWitnessHologram(response) {
+  const stamp = $("witnessHoloStamp");
+  if (!stamp) return;
+  stamp.textContent = response === "accepted" ? "Reserved" : "Declined";
+  stamp.classList.toggle("declined", response === "declined");
+  stamp.classList.remove("is-stamped");
+  void stamp.offsetWidth;
+  stamp.classList.add("is-stamped");
+}
 const ticketAnimation = {
   play: () => $("btn")?.click(),
   reserve: (animate = true) => {
@@ -329,6 +353,11 @@ const ticketAnimation = {
 rsvpForm?.querySelectorAll('input[name="rsvpStatus"]').forEach(input => {
   input.addEventListener("change", () => {
     if (!input.checked || !ticketAnimation) return;
+    if (isWitnessHoloGuest) {
+      revealWitnessHologram(input.value);
+      void submitRsvp(input.value);
+      return;
+    }
     if (input.value === "accepted") ticketAnimation.reserve();
     if (input.value === "declined") ticketAnimation.decline();
     void submitRsvp(input.value);
@@ -362,10 +391,22 @@ function setRsvpUI() {
   setRsvpFormFinal(Boolean(selectedResponse));
 
   if (selectedResponse === "accepted") {
+    if (isWitnessHoloGuest) {
+      revealWitnessHologram(selectedResponse);
+      setTimeout(() => stampWitnessHologram(selectedResponse), 500);
+      setRsvpStatus("Your response is saved — we are honored to have you as our witness.", "success");
+      return;
+    }
     ticketAnimation?.reserve(false);
     window.syncTicketToRsvpChoice?.();
     setRsvpStatus("Your response is saved — we are delighted you can join us!", "success");
   } else if (selectedResponse === "declined") {
+    if (isWitnessHoloGuest) {
+      revealWitnessHologram(selectedResponse);
+      setTimeout(() => stampWitnessHologram(selectedResponse), 1450);
+      setRsvpStatus("Your response is saved. Thank you for letting us know.", "success");
+      return;
+    }
     ticketAnimation?.decline(false);
     window.syncTicketToRsvpChoice?.();
     setRsvpStatus("Your response is saved. Thank you for letting us know.", "success");
@@ -476,6 +517,14 @@ function setGuestUI() {
   const reservationNumber = $("reservationNumber");
   const tableNumber = $("tableNumber");
   const seatNumber = $("seatNumber");
+
+  isWitnessHoloGuest = witnessHoloNames.has(String(guest.name || "").trim().toLocaleLowerCase());
+  const reservations = $("reservations");
+  if (reservations) reservations.classList.toggle("witness-holo-mode", isWitnessHoloGuest);
+  const holoName = $("witnessHoloName");
+  const holoNumber = $("witnessHoloNumber");
+  if (holoName) holoName.textContent = guest.name;
+  if (holoNumber) holoNumber.textContent = guest.reservation_number || "R-00";
 
   if (guestName) guestName.textContent = guest.name;
   if (overlayGuestName) overlayGuestName.textContent = guest.name;
