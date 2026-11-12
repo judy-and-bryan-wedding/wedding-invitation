@@ -61,24 +61,10 @@ body {
 
 /* foil layer: revealed by a wavy water-style clip-path spreading from several points */
 .holo {
-  position: absolute; inset: 0; opacity: 0;
-  clip-path: none; -webkit-clip-path: none;
-  transition: opacity 1.35s cubic-bezier(.22, 1, .36, 1);
-  will-change: opacity;
+  position: absolute; inset: 0;
+  clip-path: inset(0 0 100% 0); -webkit-clip-path: inset(0 0 100% 0);
+  will-change: clip-path;
 }
-.ticket.on .holo { opacity: 1; }
-.shape > .content {
-  transition: opacity .4s ease .35s;
-}
-.ticket.on .shape > .content {
-  opacity: 0;
-  transition-delay: .2s;
-}
-.holo .content.hv {
-  opacity: 0;
-  transition: opacity .45s ease .75s;
-}
-.ticket.on .holo .content.hv { opacity: 1; }
 .bg { position: absolute; inset: 0; background-color: #fff; filter: url(#bump) hue-rotate(var(--hue)); }
 .holographic {
   background-image:
@@ -166,8 +152,6 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
   .ticket.accepted { --gb: 14px; }
   .stamp.inking { animation: none; opacity: .9; }
   .pane { transition-duration: 0s !important; transition-delay: 0s !important; }
-  .holo { transition-duration: 0s !important; }
-  .shape > .content, .holo .content.hv { transition-duration: 0s !important; transition-delay: 0s !important; }
 }
 
 /* ---------- accepted: the ticket outline shines ---------- */
@@ -302,18 +286,19 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
   top: 0;
   scale: 1;
   transform: none !important;
+  filter: none !important;
 }
+.ticket.accepted .rim { opacity: 0 !important; animation: none !important; }
+.rsvp.sweep::after { animation: none !important; opacity: 0 !important; }
 .stamp span { font-size: clamp(16px, 4.5cqw, 22px); }
 .stamp { padding: 6px 10px; }
 .go { display: none; }
 .pane.plain { position: relative; inset: auto; background: none; box-shadow: none; }
 .pane.plain,
 .pane.witness {
-  transition-duration: .9s;
-  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+  transition: none !important;
   transform: none !important;
   filter: none !important;
-  will-change: opacity;
 }
 .pane { min-width: 0; }
 .content .main, .content .stub { min-width: 0; }
@@ -415,6 +400,7 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
         wmsg = document.getElementById('wmsg'), stampEl = document.getElementById('stamp'), stampWord = document.getElementById('stampWord'),
         stampSub = document.getElementById('stampSub');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const HIDDEN = 'inset(0 0 100% 0)';
   const SPREAD = 1500, STAGGER = 700, TAU = Math.PI * 2, N = 48;
 
   const copy = extra => { const c = src.cloneNode(true); c.removeAttribute('id'); c.classList.remove('flow'); if (extra) c.classList.add(extra); c.setAttribute('aria-hidden', 'true'); return c; };
@@ -431,6 +417,11 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
   const ctx = cv.getContext('2d');
 
   let on = false, busy = false, drops = [], total = 0, W = 0, H = 0;
+  const setClip = value => {
+    holo.style.clipPath = value;
+    holo.style.webkitClipPath = value;
+  };
+  const ease = value => 1 - Math.pow(1 - value, 2.4);
 
   /* ---------- chipping reveal: the plain ticket cracks, glows, and breaks away piece by piece ---------- */
   const COLS = 16, ROWS = 7, SPAN = 1900;
@@ -465,11 +456,17 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     total = SPAN + 900;
     return out;
   }
+  const poly = (pts, cx, cy, scale) => 'M' + pts.map((point, index) =>
+    (index ? 'L' : '') + (cx + (point[0] - cx) * scale).toFixed(1) + ' ' + (cy + (point[1] - cy) * scale).toFixed(1)
+  ).join('') + 'Z';
   const trace = (pts, ox, oy) => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0] + ox, p[1] + oy) : ctx.moveTo(p[0] + ox, p[1] + oy)); ctx.closePath(); };
 
   function paint(ms, fx) {
     ctx.clearRect(0, 0, W, H);
+    let clip = '';
     cells.forEach(c => {
+      const progress = Math.min(Math.max((ms - c.t) / 240, 0), 1);
+      if (progress > 0) clip += poly(c.pts, c.cx, c.cy, .55 + .52 * ease(progress));
       if (!fx) return;
       const dt = ms - c.t;
       if (dt < 0 && dt > -340) { // hairline crack with light leaking through just before it breaks
@@ -487,6 +484,7 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
         ctx.strokeStyle = `rgba(217,211,194,${al})`; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
       }
     });
+    setClip(clip ? `path('${clip}')` : HIDDEN);
   }
 
   /* ---------- RSVP: the question changes with the hologram, the answer decides how the ticket ends ---------- */
@@ -506,14 +504,11 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     plainPane.inert = true;
     toggle(() => {
       witnessPane.inert = false;
-      witnessPane.querySelector('h2').focus({ preventScroll: true });
     });
   }));
-  witnessPane.querySelector('h2').tabIndex = -1;
   const wOpts = [...rsvp.querySelectorAll('input[name="witness"]')];
   const setLabel = () => { label.textContent = final ? 'Reset demo' : on ? 'Back to plain ticket' : 'Reveal hologram'; btn.setAttribute('aria-pressed', on); };
   const syncSubmit = () => { submit.disabled = !initialized || !choice || busy || saving || final; };
-  const sweep = () => { if (reduce.matches) return; rsvp.classList.remove('sweep'); void rsvp.offsetWidth; rsvp.classList.add('sweep'); };
   const swap = v => {
     plainPane.inert = v || !initialized;
     witnessPane.inert = !v || busy;
@@ -524,7 +519,6 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
       src.querySelector('.seat').textContent = 'Witness to Our Wedding';
       src.querySelector('.note').textContent = hvCopy.querySelector('.note').textContent;
     }
-    sweep();
   };
   rsvp.addEventListener('animationend', e => { if (e.animationName === 'sweep') rsvp.classList.remove('sweep'); });
   shape.addEventListener('animationend', e => { if (e.animationName === 'thud') shape.classList.remove('thud'); });
@@ -554,12 +548,14 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     syncSubmit();
     if (choice === 'accept') {
       on = true;
+      setClip('none');
       t.classList.add('on', 'accepted');
       setTimeout(() => stamp('reserved'), animate && !reduce.matches ? 500 : 0);
     } else if (animate && on) {
       toggle(() => stamp('declined'));
     } else {
       on = false;
+      setClip(HIDDEN);
       t.classList.remove('on', 'accepted');
       stamp('declined');
     }
@@ -638,8 +634,7 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     t.classList.toggle('on', on);
     t.style.transform = '';
     clearTimeout(swapT);
-    if (on) swapT = setTimeout(() => swap(true), reduce.matches ? 0 : 900);          // question changes mid-reveal
-    else if (!final) swapT = setTimeout(() => swap(false), reduce.matches ? 0 : 150);
+    if (!on && !final) swap(false);
 
     const r = t.getBoundingClientRect();
     W = r.width; H = r.height;
@@ -647,14 +642,21 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (on) cells = makeCells(W, H);
 
-    const finish = () => { ctx.clearRect(0, 0, W, H); busy = false; syncSubmit(); if (done) done(); };
+    const finish = () => {
+      setClip(on ? 'none' : HIDDEN);
+      ctx.clearRect(0, 0, W, H);
+      if (on) swap(true);
+      busy = false;
+      syncSubmit();
+      if (done) done();
+    };
     if (reduce.matches || !cells.length) return finish();
 
     const dur = on ? total : 900, t0 = performance.now();
     (function frame(now) {
       const u = Math.min((now - t0) / dur, 1);
-      // Restore the crack, glow and falling paper chips while the holographic
-      // layer crossfades underneath. The ticket itself never moves or clips.
+      // The generated chip mask itself reveals the hologram. There is no
+      // separate fade before or after the paper breaks away.
       paint(on ? u * total : (1 - u) * SPAN, on);
       if (u < 1) requestAnimationFrame(frame); else finish();
     })(t0);

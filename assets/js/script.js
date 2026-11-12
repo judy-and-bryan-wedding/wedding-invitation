@@ -384,7 +384,7 @@ function mountWitnessTicket() {
     if (alreadyAnswered) window.requestAnimationFrame(() => frame.classList.add("is-visible"));
     if (pendingWitnessReveal) revealWitnessInvitation(pendingWitnessReveal.response);
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-smooth-3";
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-chip-4";
   if (alreadyAnswered) section.classList.add("has-witness-ticket");
   else section.querySelector(".rsvp-card > p").textContent = "Choose an answer to continue to your special invitation.";
   section.querySelector(".reservations-grid").prepend(frame);
