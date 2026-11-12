@@ -23,7 +23,7 @@ test('hologram is revealed by chipping without moving or fading the ticket',()=>
   assert.match(witness,/setClip\(clip \? `path\('\$\{clip\}'\)` : HIDDEN\)/);
   assert.doesNotMatch(witness,/transition: opacity 1\.35s/);
   assert.doesNotMatch(style,/\.witness-ticket-frame \{[\s\S]*?transform:/);
-  assert.match(witness,/\.pane\.witness \{[\s\S]*?transition: none !important/);
+  assert.match(witness,/\.rsvp\.witness \.pane\.witness \{[\s\S]*?transition: opacity \.65s ease \.12s/);
 });
 
 test('chipping returns without hover movement or a witness highlight box',()=>{
@@ -33,4 +33,11 @@ test('chipping returns without hover movement or a witness highlight box',()=>{
   assert.match(witness,/\.rsvp\.witness \{ border-color: var\(--card-line\); box-shadow: none; \}/);
   assert.doesNotMatch(witness,/querySelector\('h2'\)\.focus/);
   assert.match(witness,/\.ticket\.accepted \.rim \{ opacity: 0 !important/);
+});
+
+test('only the RSVP panes fade and the hologram keeps strong color',()=>{
+  assert.match(witness,/\.bg \{[^}]*saturate\(1\.75\) contrast\(1\.08\)/);
+  assert.match(witness,/rgba\(253,251,245,\.62\)/);
+  assert.match(witness,/\.glint \{[^}]*opacity: \.72/);
+  assert.doesNotMatch(witness,/\.holo \{[^}]*transition: opacity/);
 });
