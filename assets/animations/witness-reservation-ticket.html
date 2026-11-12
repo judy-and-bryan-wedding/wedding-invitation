@@ -67,6 +67,18 @@ body {
   will-change: opacity;
 }
 .ticket.on .holo { opacity: 1; }
+.shape > .content {
+  transition: opacity .4s ease .35s;
+}
+.ticket.on .shape > .content {
+  opacity: 0;
+  transition-delay: .2s;
+}
+.holo .content.hv {
+  opacity: 0;
+  transition: opacity .45s ease .75s;
+}
+.ticket.on .holo .content.hv { opacity: 1; }
 .bg { position: absolute; inset: 0; background-color: #fff; filter: url(#bump) hue-rotate(var(--hue)); }
 .holographic {
   background-image:
@@ -155,6 +167,7 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
   .stamp.inking { animation: none; opacity: .9; }
   .pane { transition-duration: 0s !important; transition-delay: 0s !important; }
   .holo { transition-duration: 0s !important; }
+  .shape > .content, .holo .content.hv { transition-duration: 0s !important; transition-delay: 0s !important; }
 }
 
 /* ---------- accepted: the ticket outline shines ---------- */
@@ -197,7 +210,7 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
   background: linear-gradient(180deg, var(--card-a), var(--card-b));
   transition: border-color .8s, box-shadow .8s;
 }
-.rsvp.witness { border-color: #b7aee6; box-shadow: 0 0 0 1px rgba(140, 200, 255, .4), 0 14px 40px -16px rgba(150, 110, 255, .5); }
+.rsvp.witness { border-color: var(--card-line); box-shadow: none; }
 .rsvp::after { /* one soft iridescent pass whenever the question changes */
   content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: inherit;
   background: linear-gradient(105deg, transparent 32%, rgba(127,232,255,.32) 42%, rgba(255,123,240,.3) 50%, rgba(255,233,168,.36) 58%, transparent 68%) 120% 0 / 260% 100% no-repeat;
@@ -282,9 +295,14 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
 .field { min-height: 48px; max-height: 150px; padding: 7px 10px; border-radius: 12px; font-size: 16px; }
 .act { margin-top: 6px; }
 .submit { min-height: 44px; padding: 10px; font-size: 12px; }
-/* Animate the foil lighting and outline only; perspective and scale soften text. */
-.ticket.on { animation: none; }
-.ticket.on.accepted { animation: glowIn .9s ease-out both, glow 2.8s ease-in-out .9s infinite; }
+/* Keep the ticket fixed in place before, during and after the reveal. */
+.ticket.on,
+.ticket.on.accepted {
+  animation: none !important;
+  top: 0;
+  scale: 1;
+  transform: none !important;
+}
 .stamp span { font-size: clamp(16px, 4.5cqw, 22px); }
 .stamp { padding: 6px 10px; }
 .go { display: none; }
@@ -393,7 +411,6 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
   const t = document.getElementById('ticket'), holo = document.getElementById('holo'),
         shape = document.getElementById('shape'), src = document.getElementById('content'),
         btn = document.getElementById('go'), label = document.getElementById('goText'),
-        plight = document.getElementById('plight'),
         rsvp = document.getElementById('rsvp'), submit = document.getElementById('submit'), status = document.getElementById('status'),
         wmsg = document.getElementById('wmsg'), stampEl = document.getElementById('stamp'), stampWord = document.getElementById('stampWord'),
         stampSub = document.getElementById('stampSub');
@@ -413,40 +430,11 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
   shape.appendChild(cv);
   const ctx = cv.getContext('2d');
 
-  let on = false, busy = false, drops = [], total = 0, W = 0, H = 0, lastPtr = -9999;
-  // The foil remains perfectly aligned with the plain ticket and crossfades
-  // in place. No changing clip-path means no intermediate re-positioning.
-  const setClip = () => {};
-  const ease = u => 1 - Math.pow(1 - u, 2.4);
-
-  /* ---------- holographic lighting ---------- */
-  function light(px, py) {
-    const r = t.getBoundingClientRect(), x = px / r.width, y = py / r.height;
-    t.style.setProperty('--mx', (x * 100) + '%');
-    t.style.setProperty('--my', (y * 100) + '%');
-    t.style.setProperty('--hue', ((x - .5) * 70) + 'deg');
-    plight.setAttribute('x', px); plight.setAttribute('y', py);
-    // Keep text on a flat, unscaled plane while the foil light follows the pointer.
-  }
-  t.addEventListener('pointermove', e => {
-    const r = t.getBoundingClientRect();
-    lastPtr = performance.now();
-    light(e.clientX - r.left, e.clientY - r.top);
-  });
-  t.addEventListener('pointerleave', () => { if (!busy) t.style.transform = ''; });
-  // idle sweep: when nobody is touching the ticket, a light glides across the foil
-  (function idle(now) {
-    if (on && !reduce.matches && now - lastPtr > 1500) {
-      const r = t.getBoundingClientRect();
-      light(r.width * (.5 + .42 * Math.sin(now / 1100)), r.height * (.5 + .35 * Math.sin(now / 1700 + 1)));
-    }
-    requestAnimationFrame(idle);
-  })(0);
+  let on = false, busy = false, drops = [], total = 0, W = 0, H = 0;
 
   /* ---------- chipping reveal: the plain ticket cracks, glows, and breaks away piece by piece ---------- */
-  const COLS = 16, ROWS = 7, CHIP = 240, SPAN = 1900;
+  const COLS = 16, ROWS = 7, SPAN = 1900;
   let cells = [];
-  const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
   function makeCells(w, h) {
     const cw = w / COLS, ch = h / ROWS, V = [], out = [];
     for (let j = 0; j <= ROWS; j++) { V[j] = []; for (let i = 0; i <= COLS; i++) {
@@ -477,15 +465,11 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     total = SPAN + 900;
     return out;
   }
-  const poly = (pts, cx, cy, s) => 'M' + pts.map((p, i) => (i ? 'L' : '') + (cx + (p[0] - cx) * s).toFixed(1) + ' ' + (cy + (p[1] - cy) * s).toFixed(1)).join('') + 'Z';
   const trace = (pts, ox, oy) => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0] + ox, p[1] + oy) : ctx.moveTo(p[0] + ox, p[1] + oy)); ctx.closePath(); };
 
   function paint(ms, fx) {
     ctx.clearRect(0, 0, W, H);
-    let clip = '';
     cells.forEach(c => {
-      const u = clamp((ms - c.t) / CHIP, 0, 1);
-      if (u > 0) clip += poly(c.pts, c.cx, c.cy, .55 + .52 * ease(u));
       if (!fx) return;
       const dt = ms - c.t;
       if (dt < 0 && dt > -340) { // hairline crack with light leaking through just before it breaks
@@ -503,7 +487,6 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
         ctx.strokeStyle = `rgba(217,211,194,${al})`; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
       }
     });
-      setClip();
   }
 
   /* ---------- RSVP: the question changes with the hologram, the answer decides how the ticket ends ---------- */
@@ -665,8 +648,16 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     if (on) cells = makeCells(W, H);
 
     const finish = () => { ctx.clearRect(0, 0, W, H); busy = false; syncSubmit(); if (done) done(); };
-    if (reduce.matches) return finish();
-    window.setTimeout(finish, on ? 1350 : 900);
+    if (reduce.matches || !cells.length) return finish();
+
+    const dur = on ? total : 900, t0 = performance.now();
+    (function frame(now) {
+      const u = Math.min((now - t0) / dur, 1);
+      // Restore the crack, glow and falling paper chips while the holographic
+      // layer crossfades underneath. The ticket itself never moves or clips.
+      paint(on ? u * total : (1 - u) * SPAN, on);
+      if (u < 1) requestAnimationFrame(frame); else finish();
+    })(t0);
   }
 
 })();

@@ -25,3 +25,12 @@ test('hologram crossfades without moving or scaling the ticket',()=>{
   assert.doesNotMatch(style,/\.witness-ticket-frame \{[\s\S]*?transform:/);
   assert.match(witness,/\.pane\.witness \{[\s\S]*?transform: none !important/);
 });
+
+test('chipping returns without hover movement or a witness highlight box',()=>{
+  assert.match(witness,/paint\(on \? u \* total : \(1 - u\) \* SPAN, on\)/);
+  assert.doesNotMatch(witness,/t\.addEventListener\('pointermove'/);
+  assert.match(witness,/\.ticket\.on,[\s\S]*?animation: none !important;[\s\S]*?transform: none !important/);
+  assert.match(witness,/\.rsvp\.witness \{ border-color: var\(--card-line\); box-shadow: none; \}/);
+  assert.match(witness,/\.ticket\.on \.shape > \.content \{[\s\S]*?opacity: 0/);
+  assert.match(witness,/\.ticket\.on \.holo \.content\.hv \{ opacity: 1; \}/);
+});
