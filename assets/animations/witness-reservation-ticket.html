@@ -203,13 +203,18 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
 @keyframes sweep { 0% { opacity: 0; background-position: 120% 0; } 15%, 85% { opacity: 1; } 100% { opacity: 0; background-position: -20% 0; } }
 
 .pane { grid-area: 1 / 1; text-align: center; }
-.pane.plain { transition: opacity .7s ease, transform .7s ease, filter .7s ease, visibility 0s; }
-.pane.witness { opacity: 0; transform: translateY(14px) scale(.985); filter: blur(8px); visibility: hidden;
-  transition: opacity .7s ease, transform .7s ease, filter .7s ease, visibility 0s linear .7s; }
-.rsvp.witness .pane.plain { opacity: 0; transform: translateY(-14px) scale(.985); filter: blur(8px); visibility: hidden;
-  transition: opacity .6s ease, transform .6s ease, filter .6s ease, visibility 0s linear .6s; }
-.rsvp.witness .pane.witness { opacity: 1; transform: none; filter: none; visibility: visible;
-  transition: opacity .7s ease .25s, transform .7s ease .25s, filter .7s ease .25s, visibility 0s; }
+.pane.plain { opacity: 1; visibility: visible; transition: none; }
+.pane.witness {
+  opacity: 1; transform: none; filter: none; visibility: hidden;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path .7s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .7s;
+}
+.rsvp.witness .pane.plain { opacity: 0; transform: none; filter: none; visibility: hidden; transition: none; }
+.rsvp.witness .pane.witness {
+  opacity: 1; transform: none; filter: none; visibility: visible;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path .7s cubic-bezier(.22, 1, .36, 1), visibility 0s;
+}
 
 .pane h2 { font: 500 2.25rem/1.1 "Cormorant Garamond", Georgia, serif; margin: 0 0 6px; }
 .hint { font-size: .74rem; color: var(--muted); margin: 0 0 14px; }
@@ -298,18 +303,6 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
 .pane.witness {
   transform: none !important;
   filter: none !important;
-}
-.pane.plain {
-  transition: opacity .55s ease, visibility 0s !important;
-}
-.pane.witness {
-  transition: opacity .55s ease, visibility 0s linear .55s !important;
-}
-.rsvp.witness .pane.plain {
-  transition: opacity .45s ease, visibility 0s linear .45s !important;
-}
-.rsvp.witness .pane.witness {
-  transition: opacity .65s ease .12s, visibility 0s !important;
 }
 .pane { min-width: 0; }
 .content .main, .content .stub { min-width: 0; }

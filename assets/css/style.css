@@ -6216,11 +6216,8 @@ main > .section{
   border: 0;
   background: transparent;
   overflow: hidden;
-  opacity: 0;
   pointer-events: none;
-  transition: opacity .65s ease;
 }
 #reservations .witness-ticket-frame.is-visible {
-  opacity: 1;
   pointer-events: auto;
 }

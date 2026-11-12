@@ -12,9 +12,8 @@ test('witness iframe cannot show its own scrollbar',()=>{
   assert.match(witness,/body \{[^}]*overflow: hidden/);
 });
 
-test('witness iframe enters without changing its position',()=>{
-  assert.match(style,/\.witness-ticket-frame \{[\s\S]*?transition: opacity \.65s ease/);
-  assert.match(style,/\.witness-ticket-frame\.is-visible \{[\s\S]*?opacity: 1/);
+test('witness iframe enters without changing position or fading',()=>{
+  assert.doesNotMatch(style,/\.witness-ticket-frame \{[^}]*transition: opacity/);
   assert.match(script,/requestAnimationFrame\(\(\) => \{[\s\S]*?classList\.add\("is-visible"\)/);
 });
 
@@ -23,7 +22,7 @@ test('hologram is revealed by chipping without moving or fading the ticket',()=>
   assert.match(witness,/setClip\(clip \? `path\('\$\{clip\}'\)` : HIDDEN\)/);
   assert.doesNotMatch(witness,/transition: opacity 1\.35s/);
   assert.doesNotMatch(style,/\.witness-ticket-frame \{[\s\S]*?transform:/);
-  assert.match(witness,/\.rsvp\.witness \.pane\.witness \{[\s\S]*?transition: opacity \.65s ease \.12s/);
+  assert.match(witness,/\.rsvp\.witness \.pane\.witness \{[\s\S]*?transition: clip-path \.7s/);
 });
 
 test('chipping returns without hover movement or a witness highlight box',()=>{
@@ -35,9 +34,10 @@ test('chipping returns without hover movement or a witness highlight box',()=>{
   assert.match(witness,/\.ticket\.accepted \.rim \{ opacity: 0 !important/);
 });
 
-test('only the RSVP panes fade and the hologram keeps strong color',()=>{
+test('RSVP card wipes without fading and the hologram keeps strong color',()=>{
   assert.match(witness,/\.bg \{[^}]*saturate\(1\.75\) contrast\(1\.08\)/);
   assert.match(witness,/rgba\(253,251,245,\.62\)/);
   assert.match(witness,/\.glint \{[^}]*opacity: \.72/);
   assert.doesNotMatch(witness,/\.holo \{[^}]*transition: opacity/);
+  assert.doesNotMatch(witness,/\.rsvp\.witness \.pane\.witness \{[^}]*transition: opacity/);
 });
