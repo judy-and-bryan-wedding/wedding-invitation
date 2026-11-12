@@ -316,8 +316,13 @@ function revealWitnessInvitation(response) {
   if (!frame || frame.dataset.ready !== "true") return;
   $("reservations").classList.add("has-witness-ticket");
   frame.hidden = false;
-  frame.contentWindow.revealWitnessInvitation(pendingWitnessReveal);
-  pendingWitnessReveal = null;
+  // Let the iframe become a rendered grid item before fading it in. This
+  // prevents the normal RSVP from snapping directly to the witness version.
+  window.requestAnimationFrame(() => {
+    frame.classList.add("is-visible");
+    frame.contentWindow.revealWitnessInvitation(pendingWitnessReveal);
+    pendingWitnessReveal = null;
+  });
 }
 
 async function saveWitnessResponse(response, note) {
@@ -363,6 +368,7 @@ function mountWitnessTicket() {
   frame.id = "witnessTicketFrame";
   frame.title = `Reservation and witness response for ${guest.name}`;
   frame.className = "witness-ticket-frame";
+  frame.setAttribute("scrolling", "no");
   const alreadyAnswered = ["accepted", "declined"].includes(guest.rsvp_status);
   frame.hidden = !alreadyAnswered;
   frame.addEventListener("load", () => {
@@ -375,9 +381,10 @@ function mountWitnessTicket() {
       resize: height => { frame.style.height = `${height}px`; }
     });
     frame.dataset.ready = "true";
+    if (alreadyAnswered) window.requestAnimationFrame(() => frame.classList.add("is-visible"));
     if (pendingWitnessReveal) revealWitnessInvitation(pendingWitnessReveal.response);
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-compact-3";
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-smooth-2";
   if (alreadyAnswered) section.classList.add("has-witness-ticket");
   else section.querySelector(".rsvp-card > p").textContent = "Choose an answer to continue to your special invitation.";
   section.querySelector(".reservations-grid").prepend(frame);

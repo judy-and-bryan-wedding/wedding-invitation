@@ -60,7 +60,13 @@ body {
 }
 
 /* foil layer: revealed by a wavy water-style clip-path spreading from several points */
-.holo { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); -webkit-clip-path: inset(0 0 100% 0); }
+.holo {
+  position: absolute; inset: 0; opacity: 0;
+  clip-path: none; -webkit-clip-path: none;
+  transition: opacity 1.35s cubic-bezier(.22, 1, .36, 1);
+  will-change: opacity;
+}
+.ticket.on .holo { opacity: 1; }
 .bg { position: absolute; inset: 0; background-color: #fff; filter: url(#bump) hue-rotate(var(--hue)); }
 .holographic {
   background-image:
@@ -148,6 +154,7 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
   .ticket.accepted { --gb: 14px; }
   .stamp.inking { animation: none; opacity: .9; }
   .pane { transition-duration: 0s !important; transition-delay: 0s !important; }
+  .holo { transition-duration: 0s !important; }
 }
 
 /* ---------- accepted: the ticket outline shines ---------- */
@@ -247,8 +254,9 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
 </style>
 <style>
 /* Embed the supplied design without inheriting the invitation's ticket styles. */
-html { height: auto; }
-body { min-height: 0; justify-content: flex-start; background: transparent; padding: 8px 0 10px; gap: 15px; container-type: inline-size; }
+html { height: auto; overflow: hidden; scrollbar-width: none; }
+body { min-height: 0; justify-content: flex-start; background: transparent; padding: 8px 0 10px; gap: 15px; container-type: inline-size; overflow: hidden; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 /* Match the normal ticket's footprint using layout sizes, never a scaled bitmap. */
 .ticket { width: min(440px, 94%); min-height: clamp(128px, 32cqw, 150px); --stub-w: clamp(70px, 22.5cqw, 106px); --notch: 9px; }
 .shape, .rim { border-radius: 18px; }
@@ -281,6 +289,14 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
 .stamp { padding: 6px 10px; }
 .go { display: none; }
 .pane.plain { position: relative; inset: auto; background: none; box-shadow: none; }
+.pane.plain,
+.pane.witness {
+  transition-duration: .9s;
+  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+  transform: none !important;
+  filter: none !important;
+  will-change: opacity;
+}
 .pane { min-width: 0; }
 .content .main, .content .stub { min-width: 0; }
 .act .status:not(:empty) { grid-area: auto; margin-top: 10px; opacity: 1; }
@@ -382,7 +398,7 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
         wmsg = document.getElementById('wmsg'), stampEl = document.getElementById('stamp'), stampWord = document.getElementById('stampWord'),
         stampSub = document.getElementById('stampSub');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const HIDDEN = 'inset(0 0 100% 0)', SPREAD = 1500, STAGGER = 700, TAU = Math.PI * 2, N = 48;
+  const SPREAD = 1500, STAGGER = 700, TAU = Math.PI * 2, N = 48;
 
   const copy = extra => { const c = src.cloneNode(true); c.removeAttribute('id'); c.classList.remove('flow'); if (extra) c.classList.add(extra); c.setAttribute('aria-hidden', 'true'); return c; };
   shape.insertBefore(copy(), holo);
@@ -398,7 +414,9 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
   const ctx = cv.getContext('2d');
 
   let on = false, busy = false, drops = [], total = 0, W = 0, H = 0, lastPtr = -9999;
-  const setClip = v => { holo.style.clipPath = v; holo.style.webkitClipPath = v; };
+  // The foil remains perfectly aligned with the plain ticket and crossfades
+  // in place. No changing clip-path means no intermediate re-positioning.
+  const setClip = () => {};
   const ease = u => 1 - Math.pow(1 - u, 2.4);
 
   /* ---------- holographic lighting ---------- */
@@ -485,11 +503,12 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
         ctx.strokeStyle = `rgba(217,211,194,${al})`; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
       }
     });
-    setClip(clip ? `path('${clip}')` : HIDDEN);
+      setClip();
   }
 
   /* ---------- RSVP: the question changes with the hologram, the answer decides how the ticket ends ---------- */
   let choice = null, final = false, swapT = 0, saving = false, initialized = false;
+  let resizeFrame = 0, lastReportedHeight = 0;
   let saveResponse = null, reportHeight = null;
   const plainPane = rsvp.querySelector('.pane.plain');
   const witnessPane = rsvp.querySelector('.pane.witness');
@@ -552,14 +571,12 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     syncSubmit();
     if (choice === 'accept') {
       on = true;
-      setClip('none');
       t.classList.add('on', 'accepted');
       setTimeout(() => stamp('reserved'), animate && !reduce.matches ? 500 : 0);
     } else if (animate && on) {
       toggle(() => stamp('declined'));
     } else {
       on = false;
-      setClip(HIDDEN);
       t.classList.remove('on', 'accepted');
       stamp('declined');
     }
@@ -613,10 +630,19 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     input.dispatchEvent(new Event('change'));
   };
   function resize() {
-    // Include whichever ticket copy needs more room after fonts or viewport change.
-    src.style.minHeight = '';
-    src.style.minHeight = Math.ceil(Math.max(hvCopy.scrollHeight, shape.querySelector('.content').scrollHeight)) + 'px';
-    reportHeight?.(Math.ceil(document.body.getBoundingClientRect().height));
+    // Batch layout reads/writes and only notify the parent when the actual
+    // content height changed. This avoids a resize feedback loop and the
+    // iframe scrollbar flash that used to happen between RSVP panes.
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => {
+      src.style.minHeight = '';
+      src.style.minHeight = Math.ceil(Math.max(hvCopy.scrollHeight, shape.querySelector('.content').scrollHeight)) + 'px';
+      const height = Math.ceil(document.body.scrollHeight) + 2;
+      if (height !== lastReportedHeight) {
+        lastReportedHeight = height;
+        reportHeight?.(height);
+      }
+    });
   }
   new ResizeObserver(resize).observe(document.body);
   document.fonts.ready.then(resize);
@@ -638,15 +664,9 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (on) cells = makeCells(W, H);
 
-    const finish = () => { setClip(on ? 'none' : HIDDEN); ctx.clearRect(0, 0, W, H); busy = false; syncSubmit(); if (done) done(); };
-    if (reduce.matches || !cells.length) return finish();
-
-    const dur = on ? total : 1000, t0 = performance.now();
-    (function frame(now) {
-      const u = Math.min((now - t0) / dur, 1);
-      paint(on ? u * total : (1 - u) * SPAN, on);
-      if (u < 1) requestAnimationFrame(frame); else finish();
-    })(t0);
+    const finish = () => { ctx.clearRect(0, 0, W, H); busy = false; syncSubmit(); if (done) done(); };
+    if (reduce.matches) return finish();
+    window.setTimeout(finish, on ? 1350 : 900);
   }
 
 })();

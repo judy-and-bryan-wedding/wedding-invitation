@@ -601,9 +601,14 @@ main > #guest.section{
     height:100%;
     overflow-x:hidden;
     overflow-y:auto;
+    scrollbar-width:none;
     overscroll-behavior-y:contain;
     -webkit-overflow-scrolling:touch;
     touch-action:pan-y pinch-zoom;
+  }
+
+  main::-webkit-scrollbar{
+    display:none;
   }
 
   html{
