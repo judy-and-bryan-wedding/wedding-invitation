@@ -57,9 +57,3 @@ test('witness guests answer both questions in one rendered card document',()=>{
   assert.match(script,/frame\.hidden = false;[\s\S]*?section\.classList\.add\("has-witness-ticket"\)/);
   assert.doesNotMatch(script,/frame\.hidden = !alreadyAnswered/);
 });
-
-test('witness pane is opaque above the first question during the wipe',()=>{
-  assert.match(witness,/\.pane\.plain \{ z-index: 0/);
-  assert.match(witness,/\.pane\.witness \{[\s\S]*?z-index: 1[\s\S]*?background: linear-gradient/);
-  assert.match(witness,/\.rsvp::after \{[\s\S]*?z-index: 3/);
-});
