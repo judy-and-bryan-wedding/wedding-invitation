@@ -59,29 +59,30 @@ body {
   box-shadow: inset 0 0 0 1.5px #d9d3c2;
 }
 
-/* Iridescent paper layer revealed by a clean light wipe. */
+/* foil layer: revealed by a wavy water-style clip-path spreading from several points */
 .holo {
   position: absolute; inset: 0;
-  clip-path: inset(0 100% 0 0); -webkit-clip-path: inset(0 100% 0 0);
-  will-change: clip-path; transition: clip-path 1.15s cubic-bezier(.22, 1, .36, 1);
+  clip-path: inset(0 0 100% 0); -webkit-clip-path: inset(0 0 100% 0);
+  will-change: clip-path;
 }
-.bg { position: absolute; inset: 0; background-color: #fff; filter: saturate(1.18) contrast(1.02) hue-rotate(var(--hue)); }
-.iridescent {
+.bg { position: absolute; inset: 0; background-color: #fff; filter: url(#bump) saturate(1.75) contrast(1.08) hue-rotate(var(--hue)); }
+.holographic {
   background-image:
-    radial-gradient(circle at 28% 18%, rgba(255,255,255,.96), transparent 34%),
-    linear-gradient(118deg, #f8e4eb 0%, #f7f4df 24%, #dff3ec 43%, #e6eef9 62%, #f2e1f0 82%, #ead8ec 100%);
+    linear-gradient(to bottom, #fe58, 90%, #0002),
+    conic-gradient(at var(--mx) var(--my), #ccc, #ff6bfe, #00f9f8, #ddd, #0081fd, #eef0bc, #0081fd, #ff6bfe, #0002, #0081fd, #ddd, #01fefb, #ccc);
 }
-.iridescent::before {
+.holographic::before {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(108deg, transparent 25%, rgba(255,255,255,.78) 45%, rgba(186,232,226,.34) 51%, rgba(231,191,227,.4) 57%, transparent 76%);
-  background-size: 220% 100%; mix-blend-mode: soft-light; animation: light-drift 4.5s ease-in-out infinite alternate;
+  background: radial-gradient(circle at 70% 20%, #f0f, #0000), repeating-radial-gradient(circle at 30% 80%, #fff, #f4a 48px, #eee 150px);
+  mix-blend-mode: color-burn;
 }
-.iridescent::after {
+.holographic::after {
   content: ""; position: absolute; inset: 0;
-  background: radial-gradient(circle at 72% 30%, rgba(255,235,249,.62), transparent 32%);
-  mix-blend-mode: screen;
+  background: linear-gradient(to bottom, #f205, #f00, #0f0, #f205);
+  background-size: 100% 300%; mix-blend-mode: difference;
+  animation: bg-pos 3s ease-in-out infinite alternate;
 }
-@keyframes light-drift { to { background-position: 100% 0; } }
+@keyframes bg-pos { to { background-position: 0 500px; } }
 .tint {
   position: absolute; inset: 0;
   background: linear-gradient(90deg, rgba(253,251,245,.62) calc(100% - var(--stub-w)), rgba(253,251,245,.46) 0);
@@ -94,6 +95,7 @@ body {
     linear-gradient(105deg, transparent calc(var(--mx) - 20%), #fff8 var(--mx), transparent calc(var(--mx) + 20%)); }
 .glint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: color-dodge; opacity: .72;
   background: radial-gradient(circle at var(--mx) var(--my), #7fe8ff88, #ff7bf044 25%, #0000 55%); }
+.ripples { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
 .filter { position: absolute; width: 0; height: 0; }
 
 /* ticket design: one markup, three copies */
@@ -146,7 +148,7 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
   .main { padding: 20px 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ticket.on, .ticket.on.accepted, .iridescent::before, .ticket.accepted .rim, .shape.thud, .rsvp.sweep::after { animation: none; }
+  .ticket.on, .ticket.on.accepted, .holographic::after, .ticket.accepted .rim, .shape.thud, .rsvp.sweep::after { animation: none; }
   .ticket.accepted { --gb: 14px; }
   .stamp.inking { animation: none; opacity: .9; }
   .pane { transition-duration: 0s !important; transition-delay: 0s !important; }
@@ -193,7 +195,7 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
   transition: border-color .8s, box-shadow .8s;
 }
 .rsvp.witness { border-color: var(--card-line); box-shadow: none; }
-.rsvp::after { /* a soft prismatic light pass whenever the question changes */
+.rsvp::after { /* one soft iridescent pass whenever the question changes */
   content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: inherit;
   background: linear-gradient(105deg, transparent 32%, rgba(127,232,255,.32) 42%, rgba(255,123,240,.3) 50%, rgba(255,233,168,.36) 58%, transparent 68%) 120% 0 / 260% 100% no-repeat;
 }
@@ -204,14 +206,14 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
 .pane.plain { opacity: 1; visibility: visible; transition: none; }
 .pane.witness {
   opacity: 1; transform: none; filter: none; visibility: hidden;
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 1.05s cubic-bezier(.22, 1, .36, 1), visibility 0s linear 1.05s;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path .7s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .7s;
 }
-.rsvp.witness .pane.plain { opacity: 1; transform: none; filter: none; visibility: visible; transition: none; }
+.rsvp.witness .pane.plain { opacity: 0; transform: none; filter: none; visibility: hidden; transition: none; }
 .rsvp.witness .pane.witness {
   opacity: 1; transform: none; filter: none; visibility: visible;
   clip-path: inset(0 0 0 0);
-  transition: clip-path 1.05s cubic-bezier(.22, 1, .36, 1), visibility 0s;
+  transition: clip-path .7s cubic-bezier(.22, 1, .36, 1), visibility 0s;
 }
 
 .pane h2 { font: 500 2.25rem/1.1 "Cormorant Garamond", Georgia, serif; margin: 0 0 6px; }
@@ -255,10 +257,10 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
 <style>
 /* Embed the supplied design without inheriting the invitation's ticket styles. */
 html { height: auto; overflow: hidden; scrollbar-width: none; }
-body { min-height: 0; justify-content: flex-start; background: transparent; padding: 0; gap: var(--source-gap, 15px); container-type: inline-size; overflow: hidden; }
+body { min-height: 0; justify-content: flex-start; background: transparent; padding: 8px 0 10px; gap: 15px; container-type: inline-size; overflow: hidden; }
 html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 /* Match the normal ticket's footprint using layout sizes, never a scaled bitmap. */
-.ticket { width: min(var(--source-ticket-width, 440px), 100%); height: var(--source-ticket-height, auto); min-height: var(--source-ticket-height, clamp(128px, 32cqw, 150px)); --stub-w: clamp(70px, 22.5cqw, 106px); --notch: 9px; }
+.ticket { width: min(440px, 94%); min-height: clamp(128px, 32cqw, 150px); --stub-w: clamp(70px, 22.5cqw, 106px); --notch: 9px; }
 .shape, .rim { border-radius: 18px; }
 .main { padding: 14px; }
 .stub { padding: 10px; gap: 5px; }
@@ -271,7 +273,7 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
 .divider i { width: 5px; height: 5px; }
 .stub .divider { width: 42px; }
 .stub .label:last-child { font-size: clamp(5px, 1.27cqw, 6px); }
-.rsvp { width: min(var(--source-card-width, 100%), 100%); height: var(--source-card-height, auto); padding: clamp(10px, 3cqw, 16px); border-radius: 17px; }
+.rsvp { width: 100%; padding: clamp(10px, 3cqw, 16px); border-radius: 17px; }
 .pane h2 { font-size: clamp(25px, 7.5cqw, 31px); margin-bottom: 2px; }
 .hint { font-size: 11px; line-height: 1.3; margin-bottom: 9px; }
 .opts { gap: 8px; margin-bottom: 6px; }
@@ -280,9 +282,8 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
 .face b { font-size: clamp(15px, 4.1cqw, 21px); }
 .face em { font-size: clamp(10px, 2.7cqw, 13px); }
 .field { min-height: 48px; max-height: 150px; padding: 7px 10px; border-radius: 12px; font-size: 16px; }
-.pane.witness .field { height: 48px; min-height: 48px; resize: none; }
 .act { margin-top: 6px; }
-.submit { min-height: 35px; padding: 7px 10px; font-size: 11px; }
+.submit { min-height: 44px; padding: 10px; font-size: 12px; }
 /* Keep the ticket fixed in place before, during and after the reveal. */
 .ticket.on,
 .ticket.on.accepted {
@@ -293,6 +294,7 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
   filter: none !important;
 }
 .ticket.accepted .rim { opacity: 0 !important; animation: none !important; }
+.rsvp.sweep::after { animation: none !important; opacity: 0 !important; }
 .stamp span { font-size: clamp(16px, 4.5cqw, 22px); }
 .stamp { padding: 6px 10px; }
 .go { display: none; }
@@ -308,19 +310,19 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
 .rsvp.locked .submit { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .stamp.inking { animation: none; opacity: .9; }
-  .ticket.on, .ticket.on.accepted, .iridescent::before,
+  .ticket.on, .ticket.on.accepted, .holographic::after,
   .ticket.accepted .rim, .shape.thud, .rsvp.sweep::after { animation: none; }
 }
 </style>
 </head>
 <body>
-<button class="go" id="go" type="button" aria-pressed="false"><i></i><span id="goText">Reveal invitation</span></button>
+<button class="go" id="go" type="button" aria-pressed="false"><i></i><span id="goText">Reveal hologram</span></button>
 
 <div class="ticket" id="ticket">
   <div class="shape" id="shape">
     <div class="plain"></div>
     <div class="holo" id="holo">
-      <div class="bg iridescent"></div>
+      <div class="bg holographic"></div>
       <div class="tint"></div>
       <div class="sheen"></div>
       <div class="glint"></div>
@@ -402,23 +404,94 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
         wmsg = document.getElementById('wmsg'), stampEl = document.getElementById('stamp'), stampWord = document.getElementById('stampWord'),
         stampSub = document.getElementById('stampSub');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const HIDDEN = 'inset(0 100% 0 0)';
+  const HIDDEN = 'inset(0 0 100% 0)';
+  const SPREAD = 1500, STAGGER = 700, TAU = Math.PI * 2, N = 48;
+
   const copy = extra => { const c = src.cloneNode(true); c.removeAttribute('id'); c.classList.remove('flow'); if (extra) c.classList.add(extra); c.setAttribute('aria-hidden', 'true'); return c; };
   shape.insertBefore(copy(), holo);
-  // The iridescent copy carries the revealed message at the exact same size.
+  // the foil copy carries the revealed message; same layout and size as the plain ticket
   const hvCopy = copy('hv');
   hvCopy.querySelectorAll('.main .label')[1].textContent = 'Our honored witness';
   hvCopy.querySelector('.seat').textContent = 'Witness to Our Wedding';
   hvCopy.querySelector('.note').textContent = 'We are honored for you to be our witness at the wedding. With heartfelt gratitude, we thank you.';
   holo.appendChild(hvCopy);
+  const cv = document.createElement('canvas');
+  cv.className = 'ripples';
+  shape.appendChild(cv);
+  const ctx = cv.getContext('2d');
 
-  let on = false, busy = false;
+  let on = false, busy = false, drops = [], total = 0, W = 0, H = 0;
   const setClip = value => {
     holo.style.clipPath = value;
     holo.style.webkitClipPath = value;
   };
+  const ease = value => 1 - Math.pow(1 - value, 2.4);
 
-  /* ---------- RSVP: the question changes with the light wipe ---------- */
+  /* ---------- chipping reveal: the plain ticket cracks, glows, and breaks away piece by piece ---------- */
+  const COLS = 16, ROWS = 7, SPAN = 1900;
+  let cells = [];
+  function makeCells(w, h) {
+    const cw = w / COLS, ch = h / ROWS, V = [], out = [];
+    for (let j = 0; j <= ROWS; j++) { V[j] = []; for (let i = 0; i <= COLS; i++) {
+      V[j][i] = [i * cw + (i === 0 || i === COLS ? 0 : (Math.random() - .5) * cw * .7),
+                 j * ch + (j === 0 || j === ROWS ? 0 : (Math.random() - .5) * ch * .7)];
+    } }
+    for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
+      const a = V[j][i], b = V[j][i + 1], c = V[j + 1][i + 1], d = V[j + 1][i];
+      (Math.random() < .5 ? [[a, b, c], [a, c, d]] : [[a, b, d], [b, c, d]]).forEach(pts => {
+        const cross = (pts[1][0] - pts[0][0]) * (pts[2][1] - pts[0][1]) - (pts[1][1] - pts[0][1]) * (pts[2][0] - pts[0][0]);
+        if (cross < 0) pts.reverse(); // same winding everywhere so overlapping chips never cancel out
+        out.push({ pts, qi: i, qj: j, cx: (pts[0][0] + pts[1][0] + pts[2][0]) / 3, cy: (pts[0][1] + pts[1][1] + pts[2][1]) / 3,
+                   t: Infinity, vx: (Math.random() - .5) * 170, vy: -50 + Math.random() * 70, vr: (Math.random() - .5) * 9 });
+      });
+    }
+    out.forEach(c => { c.nb = []; out.forEach((m, k) => { if (m !== c && Math.abs(m.qi - c.qi) <= 1 && Math.abs(m.qj - c.qj) <= 1) c.nb.push([k, 50 + Math.random() * 140]); }); });
+    // chipping starts at a few random points near the middle, then keeps breaking outward
+    const mid = out.map((c, k) => k).filter(k => Math.abs(out[k].cx - w / 2) < w * .25 && Math.abs(out[k].cy - h / 2) < h * .3);
+    for (let n = 0; n < 3; n++) out[mid[Math.floor(Math.random() * mid.length)]].t = Math.random() * 200;
+    const seen = new Set();
+    for (let n = 0; n < out.length; n++) {
+      let best = -1; out.forEach((c, k) => { if (!seen.has(k) && c.t < Infinity && (best < 0 || c.t < out[best].t)) best = k; });
+      if (best < 0) break; seen.add(best);
+      out[best].nb.forEach(([k, wt]) => { if (out[best].t + wt < out[k].t) out[k].t = out[best].t + wt; });
+    }
+    const mx = Math.max(...out.map(c => c.t));
+    out.forEach(c => { c.t = c.t / mx * SPAN; });
+    total = SPAN + 900;
+    return out;
+  }
+  const poly = (pts, cx, cy, scale) => 'M' + pts.map((point, index) =>
+    (index ? 'L' : '') + (cx + (point[0] - cx) * scale).toFixed(1) + ' ' + (cy + (point[1] - cy) * scale).toFixed(1)
+  ).join('') + 'Z';
+  const trace = (pts, ox, oy) => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0] + ox, p[1] + oy) : ctx.moveTo(p[0] + ox, p[1] + oy)); ctx.closePath(); };
+
+  function paint(ms, fx) {
+    ctx.clearRect(0, 0, W, H);
+    let clip = '';
+    cells.forEach(c => {
+      const progress = Math.min(Math.max((ms - c.t) / 240, 0), 1);
+      if (progress > 0) clip += poly(c.pts, c.cx, c.cy, .55 + .52 * ease(progress));
+      if (!fx) return;
+      const dt = ms - c.t;
+      if (dt < 0 && dt > -340) { // hairline crack with light leaking through just before it breaks
+        trace(c.pts, 0, 0); ctx.shadowBlur = 10; ctx.shadowColor = '#ffe9a8';
+        ctx.strokeStyle = `rgba(255,246,210,${.95 * (1 + dt / 340)})`; ctx.lineWidth = 1.3; ctx.stroke(); ctx.shadowBlur = 0;
+      } else if (dt >= 0 && dt < 420) { // burst of light where the piece came off
+        const a = 1 - dt / 420;
+        trace(c.pts, 0, 0); ctx.fillStyle = `rgba(255,255,255,${a * .75})`; ctx.fill();
+        ctx.shadowBlur = 14; ctx.shadowColor = '#9fe3ff'; ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 1.6; ctx.stroke(); ctx.shadowBlur = 0;
+      }
+      if (dt >= 0 && dt < 850) { // the broken chip tumbles away
+        const age = dt / 1000, al = 1 - dt / 850;
+        ctx.save(); ctx.translate(c.cx + c.vx * age, c.cy + c.vy * age + 700 * age * age); ctx.rotate(c.vr * age);
+        trace(c.pts, -c.cx, -c.cy); ctx.fillStyle = `rgba(252,250,244,${al})`; ctx.fill();
+        ctx.strokeStyle = `rgba(217,211,194,${al})`; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+      }
+    });
+    setClip(clip ? `path('${clip}')` : HIDDEN);
+  }
+
+  /* ---------- RSVP: the question changes with the hologram, the answer decides how the ticket ends ---------- */
   let choice = null, final = false, swapT = 0, saving = false, initialized = false;
   let resizeFrame = 0, lastReportedHeight = 0;
   let saveResponse = null, reportHeight = null;
@@ -438,7 +511,7 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     });
   }));
   const wOpts = [...rsvp.querySelectorAll('input[name="witness"]')];
-  const setLabel = () => { label.textContent = final ? 'Reset demo' : on ? 'Back to plain ticket' : 'Reveal invitation'; btn.setAttribute('aria-pressed', on); };
+  const setLabel = () => { label.textContent = final ? 'Reset demo' : on ? 'Back to plain ticket' : 'Reveal hologram'; btn.setAttribute('aria-pressed', on); };
   const syncSubmit = () => { submit.disabled = !initialized || !choice || busy || saving || final; };
   const swap = v => {
     plainPane.inert = v || !initialized;
@@ -516,22 +589,11 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
   });
 
   // Only the parent invitation supplies guest data and the existing private RSVP save.
-  window.setWitnessLayout = layout => {
-    if (!layout) return;
-    const root = document.documentElement.style;
-    root.setProperty('--source-ticket-width', `${layout.ticketWidth}px`);
-    root.setProperty('--source-ticket-height', `${layout.ticketHeight}px`);
-    root.setProperty('--source-card-width', `${layout.cardWidth}px`);
-    root.setProperty('--source-card-height', `${layout.cardHeight}px`);
-    root.setProperty('--source-gap', `${layout.gap}px`);
-    resize();
-  };
   window.initializeWitnessTicket = options => {
     if (initialized) return;
     initialized = true;
     saveResponse = options.save;
     reportHeight = options.resize;
-    window.setWitnessLayout(options.layout);
     document.querySelectorAll('.number').forEach(el => { el.textContent = options.reservationNumber || 'Unassigned'; });
     document.title = 'Reservation for ' + options.name;
     t.setAttribute('aria-label', 'Reservation for ' + options.name);
@@ -576,31 +638,32 @@ h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
     t.classList.toggle('on', on);
     t.style.transform = '';
     clearTimeout(swapT);
+    if (!on && !final) swap(false);
+
+    const r = t.getBoundingClientRect();
+    W = r.width; H = r.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (on) cells = makeCells(W, H);
 
     const finish = () => {
-      setClip(on ? 'inset(0 0 0 0)' : HIDDEN);
+      setClip(on ? 'none' : HIDDEN);
+      ctx.clearRect(0, 0, W, H);
       if (on) swap(true);
       busy = false;
       syncSubmit();
       if (done) done();
     };
-    if (reduce.matches) return finish();
+    if (reduce.matches || !cells.length) return finish();
 
-    // A fixed-position prismatic wipe changes both cards in place. It gives
-    // the light-catching feel of foil without moving, scaling, or fragmenting
-    // either card like a literal hologram effect.
-    if (on) {
-      setClip(HIDDEN);
-      swap(true);
-    } else {
-      setClip('inset(0 0 0 0)');
-      swap(false);
-    }
-    rsvp.classList.remove('sweep');
-    void rsvp.offsetWidth;
-    rsvp.classList.add('sweep');
-    requestAnimationFrame(() => setClip(on ? 'inset(0 0 0 0)' : HIDDEN));
-    swapT = setTimeout(finish, 1200);
+    const dur = on ? total : 900, t0 = performance.now();
+    (function frame(now) {
+      const u = Math.min((now - t0) / dur, 1);
+      // The generated chip mask itself reveals the hologram. There is no
+      // separate fade before or after the paper breaks away.
+      paint(on ? u * total : (1 - u) * SPAN, on);
+      if (u < 1) requestAnimationFrame(frame); else finish();
+    })(t0);
   }
 
 })();
