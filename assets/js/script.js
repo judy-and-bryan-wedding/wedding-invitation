@@ -404,7 +404,7 @@ function mountWitnessTicket() {
     window.requestAnimationFrame(() => frame.classList.add("is-visible"));
     if (pendingWitnessReveal) revealWitnessInvitation(pendingWitnessReveal.response);
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html?v=iridescent-wipe-2";
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=iridescent-wipe-3";
   section.querySelector(".reservations-grid").prepend(frame);
 }
 

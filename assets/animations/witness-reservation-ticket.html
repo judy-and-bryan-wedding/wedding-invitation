@@ -194,16 +194,17 @@ h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem
 }
 .rsvp.witness { border-color: var(--card-line); box-shadow: none; }
 .rsvp::after { /* a soft prismatic light pass whenever the question changes */
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: inherit;
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; border-radius: inherit;
   background: linear-gradient(105deg, transparent 32%, rgba(127,232,255,.32) 42%, rgba(255,123,240,.3) 50%, rgba(255,233,168,.36) 58%, transparent 68%) 120% 0 / 260% 100% no-repeat;
 }
 .rsvp.sweep::after { animation: sweep 1.5s ease-in-out; }
 @keyframes sweep { 0% { opacity: 0; background-position: 120% 0; } 15%, 85% { opacity: 1; } 100% { opacity: 0; background-position: -20% 0; } }
 
-.pane { grid-area: 1 / 1; text-align: center; }
-.pane.plain { opacity: 1; visibility: visible; transition: none; }
+.pane { position: relative; grid-area: 1 / 1; text-align: center; }
+.pane.plain { z-index: 0; opacity: 1; visibility: visible; transition: none; }
 .pane.witness {
-  opacity: 1; transform: none; filter: none; visibility: hidden;
+  z-index: 1; opacity: 1; transform: none; filter: none; visibility: hidden;
+  background: linear-gradient(180deg, var(--card-a), var(--card-b));
   clip-path: inset(0 100% 0 0);
   transition: clip-path 1.05s cubic-bezier(.22, 1, .36, 1), visibility 0s linear 1.05s;
 }
