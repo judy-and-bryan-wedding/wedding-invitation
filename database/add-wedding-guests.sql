@@ -1,9 +1,11 @@
 -- Add 50 people as separate wedding invitations.
 -- Reservation numbers are assigned in this shuffled order: R-01 through R-50.
 -- Each row receives a unique invite_token from the guests table default.
+-- Safe to rerun: existing name + reservation number pairs are skipped.
 
 insert into public.guests (name, message, reservation_number)
-values
+select seed.name, seed.message, seed.reservation_number
+from (values
   ('Pierre Angelli Abizo', 'We would be honored to celebrate this beautiful day with you.', 'R-01'),
   ('Rona Lim', 'We would be honored to celebrate this beautiful day with you.', 'R-02'),
   ('Catherine Lao', 'We would be honored to celebrate this beautiful day with you.', 'R-03'),
@@ -53,4 +55,11 @@ values
   ('Rowena Guevarra', 'We would be honored to celebrate this beautiful day with you.', 'R-47'),
   ('Joselito Guevarra', 'We would be honored to celebrate this beautiful day with you.', 'R-48'),
   ('Elino Abizo Jr', 'We would be honored to celebrate this beautiful day with you.', 'R-49'),
-  ('Host RIzza', 'Thank you for helping guide our celebration and make our day special.', 'R-50');
+  ('Host RIzza', 'Thank you for helping guide our celebration and make our day special.', 'R-50')
+) as seed(name, message, reservation_number)
+where not exists (
+  select 1
+  from public.guests existing
+  where existing.name = seed.name
+    and existing.reservation_number = seed.reservation_number
+);
