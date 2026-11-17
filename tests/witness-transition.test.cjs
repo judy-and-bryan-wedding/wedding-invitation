@@ -6,38 +6,46 @@ const script=fs.readFileSync('assets/js/script.js','utf8');
 const style=fs.readFileSync('assets/css/style.css','utf8');
 const witness=fs.readFileSync('assets/animations/witness-reservation-ticket.html','utf8');
 
-test('witness iframe cannot show its own scrollbar',()=>{
+test('witness iframe preserves the compact reference footprint',()=>{
   assert.match(script,/setAttribute\("scrolling", "no"\)/);
-  assert.match(witness,/html \{[^}]*overflow: hidden/);
-  assert.match(witness,/body \{[^}]*overflow: hidden/);
+  assert.match(style,/\.witness-ticket-frame \{[\s\S]*?max-width: 400px;[\s\S]*?height: 456px;/);
+  assert.match(witness,/html,body\{margin:0;overflow:hidden/);
+  assert.match(witness,/#ticketStack\{height:134px;margin-bottom:16px\}/);
+  assert.match(witness,/#panelStack\{height:296px\}/);
 });
 
-test('witness iframe enters without changing position or fading',()=>{
-  assert.doesNotMatch(style,/\.witness-ticket-frame \{[^}]*transition: opacity/);
-  assert.match(script,/requestAnimationFrame\(\(\) => \{[\s\S]*?classList\.add\("is-visible"\)/);
+test('guest and witness states share fixed ticket and RSVP stacks',()=>{
+  assert.match(witness,/\.stack>\.layer\{position:absolute;inset:0/);
+  assert.match(witness,/id="tGuest"/);
+  assert.match(witness,/id="tWit"/);
+  assert.match(witness,/id="pGuest"/);
+  assert.match(witness,/id="pWit"/);
+  assert.match(script,/frame\.hidden = false/);
+  assert.match(script,/section\.classList\.add\("has-witness-ticket"\)/);
 });
 
-test('hologram is revealed by chipping without moving or fading the ticket',()=>{
-  assert.match(witness,/const HIDDEN = 'inset\(0 0 100% 0\)'/);
-  assert.match(witness,/setClip\(clip \? `path\('\$\{clip\}'\)` : HIDDEN\)/);
-  assert.doesNotMatch(witness,/transition: opacity 1\.35s/);
-  assert.doesNotMatch(style,/\.witness-ticket-frame \{[\s\S]*?transform:/);
-  assert.match(witness,/\.rsvp\.witness \.pane\.witness \{[\s\S]*?transition: clip-path \.7s/);
+test('reference holographic design is retained',()=>{
+  assert.match(witness,/conic-gradient\(at 60% 50%,#ccc,#ff6bfe,#00f9f8/);
+  assert.match(witness,/mix-blend-mode:color-burn/);
+  assert.match(witness,/mix-blend-mode:difference/);
+  assert.match(witness,/filter:url\(#bump\) drop-shadow/);
 });
 
-test('chipping returns without hover movement or a witness highlight box',()=>{
-  assert.match(witness,/paint\(on \? u \* total : \(1 - u\) \* SPAN, on\)/);
-  assert.doesNotMatch(witness,/t\.addEventListener\('pointermove'/);
-  assert.match(witness,/\.ticket\.on,[\s\S]*?animation: none !important;[\s\S]*?filter: none !important/);
-  assert.match(witness,/\.rsvp\.witness \{ border-color: var\(--card-line\); box-shadow: none; \}/);
-  assert.doesNotMatch(witness,/querySelector\('h2'\)\.focus/);
-  assert.match(witness,/\.ticket\.accepted \.rim \{ opacity: 0 !important/);
+test('egg-crack transition shatters both ticket and RSVP card',()=>{
+  assert.match(witness,/function crack\(/);
+  assert.match(witness,/function drawCracks\(/);
+  assert.match(witness,/function shatter\(/);
+  assert.match(witness,/stack:ts,fx:\$\('fxT'\)/);
+  assert.match(witness,/stack:ps,fx:\$\('fxP'\)/);
+  assert.match(witness,/t:1900,amp:\.6/);
+  assert.match(witness,/t:1900,amp:\.25/);
 });
 
-test('RSVP card wipes without fading and the hologram keeps strong color',()=>{
-  assert.match(witness,/\.bg \{[^}]*saturate\(1\.75\) contrast\(1\.08\)/);
-  assert.match(witness,/rgba\(253,251,245,\.62\)/);
-  assert.match(witness,/\.glint \{[^}]*opacity: \.72/);
-  assert.doesNotMatch(witness,/\.holo \{[^}]*transition: opacity/);
-  assert.doesNotMatch(witness,/\.rsvp\.witness \.pane\.witness \{[^}]*transition: opacity/);
+test('witness transition still uses the parent save callback and final lock',()=>{
+  assert.match(witness,/window\.initializeWitnessTicket=options/);
+  assert.match(witness,/window\.revealWitnessInvitation=details/);
+  assert.match(witness,/await saveResponse\(selected\.value,witnessMessage\.value\.trim\(\)\)/);
+  assert.match(witness,/option\.disabled=true/);
+  assert.match(witness,/witnessMessage\.readOnly=true/);
+  assert.match(witness,/joinOptions\.forEach\(option=>option\.addEventListener\('change'/);
 });

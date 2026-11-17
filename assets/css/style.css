@@ -6210,8 +6210,8 @@ main > .section{
   display: block;
   grid-column: 1 / -1;
   width: 100%;
-  max-width: 668px;
-  height: 760px;
+  max-width: 400px;
+  height: 456px;
   margin-inline: auto;
   border: 0;
   background: transparent;

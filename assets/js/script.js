@@ -370,7 +370,7 @@ function mountWitnessTicket() {
   frame.className = "witness-ticket-frame";
   frame.setAttribute("scrolling", "no");
   const alreadyAnswered = ["accepted", "declined"].includes(guest.rsvp_status);
-  frame.hidden = !alreadyAnswered;
+  frame.hidden = false;
   frame.addEventListener("load", () => {
     frame.contentWindow.initializeWitnessTicket({
       name: guest.name,
@@ -381,12 +381,11 @@ function mountWitnessTicket() {
       resize: height => { frame.style.height = `${height}px`; }
     });
     frame.dataset.ready = "true";
-    if (alreadyAnswered) window.requestAnimationFrame(() => frame.classList.add("is-visible"));
+    window.requestAnimationFrame(() => frame.classList.add("is-visible"));
     if (pendingWitnessReveal) revealWitnessInvitation(pendingWitnessReveal.response);
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html?v=witness-chip-6";
-  if (alreadyAnswered) section.classList.add("has-witness-ticket");
-  else section.querySelector(".rsvp-card > p").textContent = "Choose an answer to continue to your special invitation.";
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=prismatic-reference-2";
+  section.classList.add("has-witness-ticket");
   section.querySelector(".reservations-grid").prepend(frame);
 }
 

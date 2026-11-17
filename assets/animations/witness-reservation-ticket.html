@@ -3,669 +3,110 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Reservation Ticket</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Witness Reservation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
 <style>
-:root {
-  --page: #e7ece5; --shadow: #00000025;
-  --card-a: #f7f9f4; --card-b: #e8eee6; --card-line: #c3cec1; --ink: #1f2d36; --muted: #5d6963;
-  --opt-bg: #ffffff8c; --opt-line: #b9c6b7; --opt-on: #2f5d4a; --field-bg: #ffffff96;
-  --btn-bg: #2a2a33; --btn-ink: #fbf9f3;
-  color-scheme: light;
-  box-sizing: border-box;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --page: #16161c; --shadow: #00000070; --btn-bg: #f1eee6; --btn-ink: #1f1f27; color-scheme: dark;
-    --card-a: #212722; --card-b: #1a1f1b; --card-line: #3a463d; --ink: #eef1ea; --muted: #9ca79f; --opt-bg: #ffffff0d; --opt-line: #46524a; --opt-on: #9fd9bd; --field-bg: #ffffff0a; }
-}
-:root[data-theme="dark"] { --page: #16161c; --shadow: #00000070; --btn-bg: #f1eee6; --btn-ink: #1f1f27; color-scheme: dark;
-    --card-a: #212722; --card-b: #1a1f1b; --card-line: #3a463d; --ink: #eef1ea; --muted: #9ca79f; --opt-bg: #ffffff0d; --opt-line: #46524a; --opt-on: #9fd9bd; --field-bg: #ffffff0a; }
-
-*, *::before, *::after { box-sizing: border-box; }
-html { height: 100%; }
-html, body { margin: 0; }
-body { min-height: 100%; }
-body {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; padding: 24px;
-  background: var(--page); font-family: "Montserrat", system-ui, sans-serif; overflow-x: hidden;
-}
-
-.ticket {
-  --stub-w: 150px; --notch: 11px; --mx: 50%; --my: 40%; --hue: 0deg;
-  position: relative; top: 0; width: min(100%, 620px); min-height: 210px; touch-action: pan-y;
-  filter: drop-shadow(0 0 var(--gb) var(--gc)) drop-shadow(0 2px 1px var(--shadow)) drop-shadow(0 10px 9px var(--shadow)) drop-shadow(0 30px 30px var(--shadow));
-  transition: transform .25s ease-out;
-}
-.ticket.on { animation: hover 3.5s ease-in-out infinite; }
-.ticket.on.accepted { animation: hover 3.5s ease-in-out infinite, glowIn .9s ease-out both, glow 2.8s ease-in-out .9s infinite; }
-@keyframes hover { 50% { top: -6px; scale: 1.01; } }
-
-.shape {
-  position: absolute; inset: 0; border-radius: 22px; overflow: hidden;
-  -webkit-mask:
-    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 0, #0000 97%, #000),
-    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 100%, #0000 97%, #000);
-  -webkit-mask-composite: source-in;
-  mask:
-    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 0, #0000 97%, #000),
-    radial-gradient(circle var(--notch) at calc(100% - var(--stub-w)) 100%, #0000 97%, #000);
-  mask-composite: intersect;
-}
-.plain {
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, #fcfaf4 calc(100% - var(--stub-w)), #edefe5 0);
-  box-shadow: inset 0 0 0 1.5px #d9d3c2;
-}
-
-/* foil layer: revealed by a wavy water-style clip-path spreading from several points */
-.holo {
-  position: absolute; inset: 0;
-  clip-path: inset(0 0 100% 0); -webkit-clip-path: inset(0 0 100% 0);
-  will-change: clip-path;
-}
-.bg { position: absolute; inset: 0; background-color: #fff; filter: url(#bump) saturate(1.75) contrast(1.08) hue-rotate(var(--hue)); }
-.holographic {
-  background-image:
-    linear-gradient(to bottom, #fe58, 90%, #0002),
-    conic-gradient(at var(--mx) var(--my), #ccc, #ff6bfe, #00f9f8, #ddd, #0081fd, #eef0bc, #0081fd, #ff6bfe, #0002, #0081fd, #ddd, #01fefb, #ccc);
-}
-.holographic::before {
-  content: ""; position: absolute; inset: 0;
-  background: radial-gradient(circle at 70% 20%, #f0f, #0000), repeating-radial-gradient(circle at 30% 80%, #fff, #f4a 48px, #eee 150px);
-  mix-blend-mode: color-burn;
-}
-.holographic::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, #f205, #f00, #0f0, #f205);
-  background-size: 100% 300%; mix-blend-mode: difference;
-  animation: bg-pos 3s ease-in-out infinite alternate;
-}
-@keyframes bg-pos { to { background-position: 0 500px; } }
-.tint {
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgba(253,251,245,.62) calc(100% - var(--stub-w)), rgba(253,251,245,.46) 0);
-  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.7);
-}
-/* lighting: a soft pool of light that follows the pointer plus a prismatic streak */
-.sheen { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
-  background:
-    radial-gradient(circle at var(--mx) var(--my), #fffe, #fff0 42%),
-    linear-gradient(105deg, transparent calc(var(--mx) - 20%), #fff8 var(--mx), transparent calc(var(--mx) + 20%)); }
-.glint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: color-dodge; opacity: .72;
-  background: radial-gradient(circle at var(--mx) var(--my), #7fe8ff88, #ff7bf044 25%, #0000 55%); }
-.ripples { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
-.filter { position: absolute; width: 0; height: 0; }
-
-/* ticket design: one markup, three copies */
-.content {
-  --text: #2a2a33; --accent: #a9782f; --soft: #6b6a72;
-  position: absolute; inset: 0; display: grid; grid-template-columns: 1fr var(--stub-w); color: var(--text);
-}
-.content.flow { position: relative; opacity: 0; }
-.content.hv { --text: #1b1a2b; --accent: #6d4a12; --soft: #3d3b4d; }
-
-.main { padding: 26px 28px; }
-.stub { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 16px; }
-.stub::before {
-  content: ""; position: absolute; left: -1px; top: calc(var(--notch) + 8px); bottom: calc(var(--notch) + 8px); width: 2px;
-  background: repeating-linear-gradient(to bottom, rgba(42,42,51,.4) 0 4px, transparent 4px 9px);
-}
-.hv .stub::before { background: repeating-linear-gradient(to bottom, #fff 0 5px, transparent 5px 10px); filter: drop-shadow(0 0 1px rgba(60,30,120,.7)); }
-
-.label { font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin: 0; }
-.hv .label { font-weight: 600; }
-.divider { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
-.divider::before, .divider::after { content: ""; height: 1.5px; flex: 1; background: linear-gradient(90deg, transparent, var(--accent)); }
-.divider::after { transform: scaleX(-1); }
-.divider i { width: 8px; height: 8px; flex: none; transform: rotate(45deg); background: var(--accent); }
-.hv .divider i { background: #3a2a8f; box-shadow: 0 0 0 1.5px #fff; }
-.stub .divider { width: 72%; margin: 2px 0; }
-
-h1, .seat { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem; margin: 6px 0 2px; font-weight: 500; }
-.hv h1, .hv .seat { font-weight: 600; }
-.seat { font-style: italic; margin: 6px 0 8px; }
-.note { font-size: .72rem; color: var(--soft); margin: 0; max-width: 40ch; line-height: 1.55; }
-.hv .note { font-weight: 500; }
-.number { font-size: 2.1rem; font-weight: 300; letter-spacing: .02em; margin: 0; }
-.hv .number { font-weight: 500; }
-
-.go {
-  display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer;
-  background: var(--btn-bg); color: var(--btn-ink); font: 500 .85rem "Montserrat", system-ui, sans-serif; letter-spacing: .04em;
-  padding: 13px 24px; border-radius: 999px; box-shadow: 0 6px 18px var(--shadow); transition: transform .2s;
-}
-.go:hover { transform: translateY(-2px); }
-.go:active { transform: scale(.97); }
-.go:focus-visible { outline: 3px solid #7a5bd6; outline-offset: 3px; }
-.go i { width: 9px; height: 9px; transform: rotate(45deg); background: linear-gradient(135deg, #ff6bfe, #0081fd, #00c9c8); }
-
-@media (max-width: 520px) {
-  .ticket { --stub-w: 112px; }
-  h1, .seat { font-size: 1.5rem; }
-  .number { font-size: 1.6rem; }
-  .main { padding: 20px 18px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ticket.on, .ticket.on.accepted, .holographic::after, .ticket.accepted .rim, .shape.thud, .rsvp.sweep::after { animation: none; }
-  .ticket.accepted { --gb: 14px; }
-  .stamp.inking { animation: none; opacity: .9; }
-  .pane { transition-duration: 0s !important; transition-delay: 0s !important; }
-}
-
-/* ---------- accepted: the ticket outline shines ---------- */
-@property --gb { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --gc { syntax: '<color>'; inherits: false; initial-value: transparent; }
-@property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-.ticket.accepted { --gc: rgba(255, 226, 150, .85); }
-@keyframes glowIn { from { --gb: 0px; } to { --gb: 12px; } }
-@keyframes glow { 0%, 100% { --gb: 12px; } 50% { --gb: 26px; } }
-.rim {
-  --ang: 0deg;
-  position: absolute; inset: 0; border-radius: 22px; padding: 2.5px; pointer-events: none; opacity: 0; transition: opacity .7s;
-  background: conic-gradient(from var(--ang), rgba(255,236,190,.45) 0 50%, #ffe9a8 63%, #fff 72%, #8fe9ff 81%, #ff8cf0 90%, rgba(255,236,190,.45));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
-}
-.ticket.accepted .rim { opacity: 1; animation: spin 3.2s linear infinite; }
-@keyframes spin { to { --ang: 360deg; } }
-
-/* ---------- rubber stamp ---------- */
-.stamp-wrap { position: absolute; z-index: 6; left: calc((100% - var(--stub-w)) / 2); top: 54%; translate: -50% -50%; pointer-events: none; }
-.stamp {
-  display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 22px 8px; white-space: nowrap;
-  border: 3px double currentColor; border-radius: 9px; color: #1f6a45; rotate: -11deg; opacity: 0;
-  mix-blend-mode: multiply; filter: url(#ink); text-transform: uppercase;
-}
-.stamp span { font: 600 1.7rem/1 "Montserrat", system-ui, sans-serif; letter-spacing: .2em; padding-left: .2em; }
-.stamp small { font: 600 .5rem/1 "Montserrat", system-ui, sans-serif; letter-spacing: .32em; padding-left: .32em; }
-.stamp.declined { color: #a3302d; rotate: -7deg; }
-.stamp.inking { animation: stamp .6s cubic-bezier(.2, .8, .25, 1) forwards; }
-@keyframes stamp { 0% { opacity: 0; scale: 2.8; } 50% { opacity: .95; scale: .93; } 70% { scale: 1.035; } 100% { opacity: .9; scale: 1; } }
-.shape.thud { animation: thud .38s ease-out; }
-@keyframes thud { 40% { translate: 0 3px; scale: .994; } 100% { translate: 0 0; scale: 1; } }
-@media (max-width: 520px) { .stamp span { font-size: 1.15rem; } .stamp { padding: 7px 14px 6px; } }
-
-/* ---------- RSVP card ---------- */
-.rsvp {
-  position: relative; width: min(100%, 620px); display: grid; overflow: hidden; color: var(--ink);
-  padding: 26px clamp(14px, 4vw, 22px) 24px; border: 1px solid var(--card-line); border-radius: 28px;
-  background: linear-gradient(180deg, var(--card-a), var(--card-b));
-  transition: border-color .8s, box-shadow .8s;
-}
-.rsvp.witness { border-color: var(--card-line); box-shadow: none; }
-.rsvp::after { /* one soft iridescent pass whenever the question changes */
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: inherit;
-  background: linear-gradient(105deg, transparent 32%, rgba(127,232,255,.32) 42%, rgba(255,123,240,.3) 50%, rgba(255,233,168,.36) 58%, transparent 68%) 120% 0 / 260% 100% no-repeat;
-}
-.rsvp.sweep::after { animation: sweep 1.5s ease-in-out; }
-@keyframes sweep { 0% { opacity: 0; background-position: 120% 0; } 15%, 85% { opacity: 1; } 100% { opacity: 0; background-position: -20% 0; } }
-
-.pane { grid-area: 1 / 1; text-align: center; }
-.pane.plain { opacity: 1; visibility: visible; transition: none; }
-.pane.witness {
-  opacity: 1; transform: none; filter: none; visibility: hidden;
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path .7s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .7s;
-}
-.rsvp.witness .pane.plain { opacity: 0; transform: none; filter: none; visibility: hidden; transition: none; }
-.rsvp.witness .pane.witness {
-  opacity: 1; transform: none; filter: none; visibility: visible;
-  clip-path: inset(0 0 0 0);
-  transition: clip-path .7s cubic-bezier(.22, 1, .36, 1), visibility 0s;
-}
-
-.pane h2 { font: 500 2.25rem/1.1 "Cormorant Garamond", Georgia, serif; margin: 0 0 6px; }
-.hint { font-size: .74rem; color: var(--muted); margin: 0 0 14px; }
-.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.opt { position: relative; display: block; cursor: pointer; }
-.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.face {
-  display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; padding: 10px 10px 14px;
-  border: 1px solid var(--opt-line); border-radius: 18px; background: var(--opt-bg);
-  transition: border-color .25s, background .25s, box-shadow .25s, opacity .3s;
-}
-.ic { width: 26px; height: 26px; margin-bottom: 6px; display: grid; place-items: center; border: 1px solid var(--opt-line); border-radius: 50%; font-size: .8rem; color: var(--muted); transition: background .25s, color .25s, border-color .25s; }
-.face b { font: 600 1.3rem/1.15 "Cormorant Garamond", Georgia, serif; }
-.face em { font-style: normal; font-size: .82rem; color: var(--muted); }
-.opt input:checked + .face { border-color: var(--opt-on); box-shadow: 0 0 0 1px var(--opt-on); background: color-mix(in srgb, var(--opt-on) 9%, var(--opt-bg)); }
-.opt input:checked + .face .ic { background: var(--opt-on); border-color: var(--opt-on); color: var(--card-a); }
-.opt input:focus-visible + .face { outline: 3px solid #7a5bd6; outline-offset: 2px; }
-.field {
-  display: block; width: 100%; min-height: 84px; resize: vertical; padding: 12px 14px; text-align: left;
-  border: 1px solid var(--opt-line); border-radius: 14px; background: var(--field-bg); color: var(--ink); font: 400 .95rem/1.45 "Montserrat", system-ui, sans-serif;
-}
-.field::placeholder { color: var(--muted); }
-.field:focus-visible { outline: 3px solid #7a5bd6; outline-offset: 2px; }
-.act { display: grid; margin-top: 12px; }
-.act > * { grid-area: 1 / 1; }
-.submit {
-  border: 0; cursor: pointer; padding: 14px; border-radius: 999px; background: var(--btn-bg); color: var(--btn-ink);
-  font: 500 .85rem "Montserrat", system-ui, sans-serif; letter-spacing: .05em; transition: opacity .35s, transform .2s;
-}
-.submit:disabled { opacity: .4; cursor: not-allowed; }
-.submit:not(:disabled):active { transform: scale(.98); }
-.submit:focus-visible { outline: 3px solid #7a5bd6; outline-offset: 3px; }
-.status { align-self: center; margin: 0; opacity: 0; transition: opacity .7s .2s; font: italic 500 1.2rem/1.35 "Cormorant Garamond", Georgia, serif; }
-.rsvp.locked .submit { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .35s, visibility 0s .35s; }
-.rsvp.locked .status { opacity: 1; }
-.rsvp.locked .opt { pointer-events: none; }
-.rsvp.locked input:not(:checked) + .face { opacity: .45; }
-@media (max-width: 520px) { .pane h2 { font-size: 1.9rem; } .face b { font-size: 1.15rem; } }
-</style>
-<style>
-/* Embed the supplied design without inheriting the invitation's ticket styles. */
-html { height: auto; overflow: hidden; scrollbar-width: none; }
-body { min-height: 0; justify-content: flex-start; background: transparent; padding: 8px 0 10px; gap: 15px; container-type: inline-size; overflow: hidden; }
-html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
-/* Match the normal ticket's footprint using layout sizes, never a scaled bitmap. */
-.ticket { width: min(440px, 94%); min-height: clamp(128px, 32cqw, 150px); --stub-w: clamp(70px, 22.5cqw, 106px); --notch: 9px; }
-.shape, .rim { border-radius: 18px; }
-.main { padding: 14px; }
-.stub { padding: 10px; gap: 5px; }
-.label { font-size: clamp(6px, 1.5cqw, 7px); letter-spacing: .12em; }
-h1 { font-size: clamp(14px, 3.76cqw, 18px); margin: 4px 0 5px; }
-.seat { font-size: clamp(17px, 4.5cqw, 21px); margin: 3px 0 5px; }
-.number { font-size: clamp(21px, 5.64cqw, 27px); }
-.note { font-size: clamp(7px, 1.69cqw, 8px); line-height: 1.35; }
-.divider { width: min(82px, 100%); margin: 5px 0; }
-.divider i { width: 5px; height: 5px; }
-.stub .divider { width: 42px; }
-.stub .label:last-child { font-size: clamp(5px, 1.27cqw, 6px); }
-.rsvp { width: 100%; padding: clamp(10px, 3cqw, 16px); border-radius: 17px; }
-.pane h2 { font-size: clamp(25px, 7.5cqw, 31px); margin-bottom: 2px; }
-.hint { font-size: 11px; line-height: 1.3; margin-bottom: 9px; }
-.opts { gap: 8px; margin-bottom: 6px; }
-.face { min-height: 70px; padding: 7px 4px; border-radius: 12px; }
-.ic { width: 25px; height: 25px; margin-bottom: 3px; }
-.face b { font-size: clamp(15px, 4.1cqw, 21px); }
-.face em { font-size: clamp(10px, 2.7cqw, 13px); }
-.field { min-height: 48px; max-height: 150px; padding: 7px 10px; border-radius: 12px; font-size: 16px; }
-.act { margin-top: 6px; }
-.submit { min-height: 44px; padding: 10px; font-size: 12px; }
-/* Keep the ticket fixed in place before, during and after the reveal. */
-.ticket.on,
-.ticket.on.accepted {
-  animation: none !important;
-  top: 0;
-  scale: 1;
-  transform: none !important;
-  filter: none !important;
-}
-.ticket.accepted .rim { opacity: 0 !important; animation: none !important; }
-.rsvp.sweep::after { animation: none !important; opacity: 0 !important; }
-.stamp span { font-size: clamp(16px, 4.5cqw, 22px); }
-.stamp { padding: 6px 10px; }
-.go { display: none; }
-.pane.plain { position: relative; inset: auto; background: none; box-shadow: none; }
-.pane.plain,
-.pane.witness {
-  transform: none !important;
-  filter: none !important;
-}
-.pane { min-width: 0; }
-.content .main, .content .stub { min-width: 0; }
-.act .status:not(:empty) { grid-area: auto; margin-top: 10px; opacity: 1; }
-.rsvp.locked .submit { display: none; }
-@media (prefers-reduced-motion: reduce) {
-  .stamp.inking { animation: none; opacity: .9; }
-  .ticket.on, .ticket.on.accepted, .holographic::after,
-  .ticket.accepted .rim, .shape.thud, .rsvp.sweep::after { animation: none; }
-}
+:root{--sage:#ebf0ea;--ink:#20272b;--gold:#b0863a;--muted:#5d6a66;--line:#b9cbbc;--cream:#faf8f1;box-sizing:border-box;color-scheme:light}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;overflow:hidden;background:transparent}
+body{width:100%;max-width:400px;margin-inline:auto;padding:8px 14px 10px;font-family:'Montserrat',system-ui,sans-serif;color:var(--ink)}
+.stack{position:relative;width:100%}
+.stack>.layer{position:absolute;inset:0;z-index:0;opacity:0;pointer-events:none}
+.stack>.layer.on{z-index:1;opacity:1;pointer-events:auto}
+.stack>.layer.in{z-index:2;opacity:1}
+#ticketStack{height:134px;margin-bottom:16px}
+#panelStack{height:296px}
+.ticket{display:flex;height:100%;border-radius:16px;overflow:visible}
+.tmain,.tstub{position:relative;height:100%;padding:14px 16px}
+.tmain{flex:1;min-width:0;border-radius:16px 0 0 16px}
+.tstub{width:29%;flex:0 0 29%;border-radius:0 16px 16px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.tag{font-size:7px;letter-spacing:.16em;color:var(--gold);margin:0 0 4px;text-transform:uppercase}
+.tmain h3{font:500 19px/1.15 'Cormorant Garamond',serif;margin:0 0 4px}
+.rule{display:flex;align-items:center;gap:5px;margin:2px 0 6px;width:84px}
+.rule i{flex:1;height:1px;background:var(--gold)}
+.rule b{width:6px;height:6px;background:var(--gold);transform:rotate(45deg)}
+.tmain h4{font:italic 500 21px/1.1 'Cormorant Garamond',serif;margin:0 0 4px}
+.tmain p:not(.tag){font-size:8.5px;line-height:1.35;margin:0;color:var(--muted)}
+.num{font:500 27px/1 'Cormorant Garamond',serif;margin:6px 0;white-space:nowrap}
+.guest .tmain{background:var(--cream);border:1.5px solid var(--gold);border-right:0}
+.guest .tstub{background:linear-gradient(#f1f1e6,#e8ebe0);border:1.5px solid var(--gold);border-left:0}
+.guest .tstub::before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;border-left:2px dashed var(--gold)}
+.guest .tstub .nt{position:absolute;left:-8px;bottom:-8.75px;width:16px;height:16px;border-radius:50%;background:var(--sage);border:1.5px solid var(--gold);z-index:2;clip-path:inset(0 0 calc(50% - 1.5px) 0)}
+.guest .tstub .nt.t{top:-8.75px;bottom:auto;clip-path:inset(calc(50% - 1.5px) 0 0 0)}
+.ticket.holo{position:relative;color:#14123a}
+.hbg{position:absolute;inset:0;border-radius:16px;z-index:0;pointer-events:none;background-color:#fff;filter:url(#bump) drop-shadow(0 6px 10px rgba(60,70,110,.3));background-image:linear-gradient(to bottom,#fe58,90%,#0002),conic-gradient(at 60% 50%,#ccc,#ff6bfe,#00f9f8,#ddd,#0081fd,#eef0bc,#0081fd,#ff6bfe,#0002,#0081fd,#ddd,#01fefb,#ccc)}
+.hbg::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 70% 20%,#f0f,#0000),repeating-radial-gradient(circle at 30% 80%,#fff,#f4a 48px,#eee 150px);mix-blend-mode:color-burn;opacity:.22}
+.hbg::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(to bottom,#f205,#f00,#0f0,#f205);background-size:100% 300%;mix-blend-mode:difference;opacity:.5;animation:hbgPos 5s ease-in-out infinite alternate}
+@keyframes hbgPos{to{background-position:0 500px}}
+.ticket.holo .tmain,.ticket.holo .tstub{background:none;color:#14123a}
+.ticket.holo .tmain>*{position:relative;z-index:1}
+.ticket.holo .tmain p:not(.tag){color:#3a3556}
+.ticket.holo .tag{color:#5a4a2a}
+.ticket.holo .tstub::before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;border-left:2px dashed #fff}
+.ticket.holo .tstub .nt{position:absolute;left:-8px;bottom:-8px;width:16px;height:16px;border-radius:50%;background:var(--sage)}
+.ticket.holo .tstub .nt.t{top:-8px;bottom:auto}
+.guest .tmain,.guest .tstub,.ticket.holo .tmain,.ticket.holo .tstub{box-shadow:0 6px 18px rgba(60,70,60,.15)}
+.panel{height:100%;border:1.5px solid var(--line);border-radius:18px;background:linear-gradient(#f6f8f4,#eef2ed);padding:14px 14px 0;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+.panel h2{font:500 28px/1.1 'Cormorant Garamond',serif;margin:2px 0 4px;text-align:center}
+.panel .hint{font-size:9.5px;color:var(--muted);margin:0 0 10px;text-align:center}
+.opts{flex:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%}
+.opt{position:relative;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.55);padding:4px 6px;height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;font:inherit;color:inherit;transition:background .25s,border-color .25s,box-shadow .25s}
+.opt input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.opt:has(input:checked){background:#fff;border-color:var(--gold)}
+.panel.holo .opt:has(input:checked){border-color:#9a6bff;box-shadow:0 0 14px rgba(150,120,255,.35)}
+.opt .ic{display:block;width:21px;height:21px;margin:0 auto 3px;border:1px solid #9aa9a0;border-radius:50%;font-size:10px;line-height:19px;color:#555}
+.opt b{display:block;white-space:nowrap;font:600 17px/1.1 'Cormorant Garamond',serif}
+.opt small{font-size:11px;color:var(--muted)}
+.opt:has(input:focus-visible){outline:3px solid #8e7dff;outline-offset:2px}
+.opt:has(input:disabled),.opt input:disabled{cursor:default}
+textarea{flex:none;width:100%;height:76px;margin-top:8px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.7);padding:10px 12px;font:13px 'Montserrat',sans-serif;color:var(--ink);resize:none}
+.sbtn{flex:none;margin-top:9px;width:100%;height:40px;border-radius:999px;border:0;background:#9b9e9c;color:#fff;font:600 11px 'Montserrat',sans-serif;letter-spacing:.03em;cursor:pointer}
+.sbtn:enabled{background:#2b2250}.sbtn:focus-visible{outline:3px solid #8e7dff;outline-offset:2px}
+.spaceNote{flex:none;height:40px;display:flex;align-items:center;justify-content:center;margin-top:9px;font:italic 10px/1.35 'Montserrat',sans-serif;color:#8a968f;text-align:center}
+.status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.fx{position:absolute;inset:0;pointer-events:none;z-index:5}.fx>*{position:absolute}.fx svg{inset:0;width:100%;height:100%;overflow:visible}
+.shards{inset:0}.shards .layer{position:absolute;inset:0;opacity:1;z-index:auto;will-change:transform}.spark{width:7px;height:7px;border-radius:50%;opacity:0}.flash{inset:-8px;border-radius:22px;background:#fff;opacity:0}
+.core{left:var(--ox);top:var(--oy);width:150px;height:150px;margin:-75px;border-radius:50%;opacity:0;mix-blend-mode:screen;background:radial-gradient(circle,#fff 0,rgba(255,236,170,.9) 28%,rgba(255,150,230,.45) 50%,transparent 68%)}
+.rays{left:var(--ox);top:var(--oy);width:320px;height:320px;margin:-160px;border-radius:50%;opacity:0;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.95) 0 5deg,transparent 5deg 17deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 68%);mask:radial-gradient(circle,#000 0,transparent 68%)}
+.burst{left:var(--ox);top:var(--oy);width:90px;height:90px;margin:-45px;border-radius:50%;opacity:0;background:conic-gradient(#ff5fb8,#ffd75e,#7dffb0,#5fe3ff,#8e7dff,#ff5fb8);filter:blur(5px);-webkit-mask:radial-gradient(circle,transparent 38%,#000 52%,transparent 70%);mask:radial-gradient(circle,transparent 38%,#000 52%,transparent 70%)}
+@media(max-width:360px){body{padding-inline:8px}.tmain,.tstub{padding:12px 10px}.tmain h3{font-size:17px}.tmain h4{font-size:18px}.tmain p:not(.tag){font-size:7.5px}.num{font-size:23px}.panel{padding-inline:9px}.panel h2{font-size:25px}.opt b{font-size:15px}.opt small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.fx{display:none}.hbg::after{animation:none}}
 </style>
 </head>
 <body>
-<button class="go" id="go" type="button" aria-pressed="false"><i></i><span id="goText">Reveal hologram</span></button>
-
-<div class="ticket" id="ticket">
-  <div class="shape" id="shape">
-    <div class="plain"></div>
-    <div class="holo" id="holo">
-      <div class="bg holographic"></div>
-      <div class="tint"></div>
-      <div class="sheen"></div>
-      <div class="glint"></div>
-    </div>
-    <div class="rim"></div>
-  </div>
-
-  <svg class="filter" aria-hidden="true">
-    <filter id="bump">
-      <feTurbulence result="noise" numOctaves="3" baseFrequency="0.7" type="fractalNoise"></feTurbulence>
-      <feSpecularLighting in="noise" result="specular" lighting-color="#fffffc" specularExponent="25" specularConstant="0.8" surfaceScale="0.15">
-        <fePointLight id="plight" z="210" y="100" x="100"></fePointLight>
-      </feSpecularLighting>
-      <feComposite result="noise2" operator="in" in="specular" in2="SourceGraphic"></feComposite>
-      <feBlend mode="screen" in2="noise2" in="SourceGraphic"></feBlend>
-    </filter>
-    <filter id="ink" x="-5%" y="-10%" width="110%" height="120%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="n"></feTurbulence>
-      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -4 0 0 0 2.9" result="speck"></feColorMatrix>
-      <feComposite in="SourceGraphic" in2="speck" operator="in" result="inked"></feComposite>
-      <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" seed="9" result="w"></feTurbulence>
-      <feDisplacementMap in="inked" in2="w" scale="2.4" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
-    </filter>
-  </svg>
-
-  <div class="content flow" id="content">
-    <div class="main">
-      <p class="label">Reservation details</p>
-      <h1>Your Seat Is Reserved</h1>
-      <div class="divider"><i></i></div>
-      <p class="label">Reception seating</p>
-      <p class="seat">To be announced</p>
-      <p class="note">Keep this invitation link private. Your table assignment will appear here once finalized.</p>
-    </div>
-    <div class="stub">
-      <p class="label">Reservation no.</p>
-      <p class="number">R-07</p>
-      <div class="divider"><i></i></div>
-      <p class="label">Private invitation</p>
-    </div>
-  </div>
-  <div class="stamp-wrap" aria-hidden="true">
-    <div class="stamp" id="stamp"><span id="stampWord">Reserved</span><small id="stampSub">Witness · Confirmed</small></div>
-  </div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="bump" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="4" result="n"/><feDiffuseLighting in="n" lighting-color="#fff" surfaceScale="0.8" result="l"><feDistantLight azimuth="45" elevation="62"/></feDiffuseLighting><feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1="1.3" k2="0" k3="0" k4="0.06"/></filter></svg>
+<div class="stack" id="ticketStack">
+  <div class="layer on" id="tGuest"><div class="ticket guest"><div class="tmain"><p class="tag">Reservation details</p><h3>Your Seat Is Reserved</h3><div class="rule"><i></i><b></b><i></i></div><p class="tag">Reception seating</p><h4>To be announced</h4><p>Keep this invitation link private. Your table assignment will appear here once finalized.</p></div><div class="tstub"><i class="nt t"></i><i class="nt"></i><p class="tag" style="color:#6a6a5a">Reservation no.</p><div class="num">R-001</div><div class="rule" style="width:50px"><i></i><b></b><i></i></div><p class="tag" style="margin-top:4px">Private invitation</p></div></div></div>
+  <div class="layer" id="tWit"><div class="ticket holo"><div class="hbg"></div><div class="tmain"><p class="tag">Reservation details</p><h3>Your Seat Is Reserved</h3><div class="rule"><i></i><b></b><i></i></div><p class="tag">Our honored witness</p><h4>Witness to Our Wedding</h4><p>We are honored for you to be our witness at the wedding. With heartfelt gratitude, we thank you.</p></div><div class="tstub"><i class="nt t"></i><i class="nt"></i><p class="tag" style="color:#14123a">Reservation no.</p><div class="num">R-001</div><div class="rule" style="width:50px"><i style="background:#2b2250"></i><b style="background:#2b2250"></b><i style="background:#2b2250"></i></div><p class="tag" style="margin-top:4px;color:#14123a">Private invitation</p></div></div></div>
+  <div class="fx" id="fxT"></div>
 </div>
-
-<section class="rsvp" id="rsvp">
-  <div class="pane plain">
-    <h2>Will You Join Us?</h2>
-    <p class="hint">Choose carefully. Your submitted response will be saved as final.</p>
-    <div class="opts" role="radiogroup" aria-label="Attendance">
-      <label class="opt"><input type="radio" name="join" value="accept"><span class="face"><span class="ic">✓</span><b>Joyfully Accept</b><em>We will be there</em></span></label>
-      <label class="opt"><input type="radio" name="join" value="decline"><span class="face"><span class="ic">×</span><b>Regretfully Decline</b><em>We cannot attend</em></span></label>
-    </div>
-    <textarea class="field" rows="3" maxlength="500" placeholder="Leave a message for the couple or share why you cannot attend." aria-label="Message for the couple"></textarea>
-  </div>
-
-  <div class="pane witness">
-    <h2>Will You Be Our Witness?</h2>
-    <p class="hint">Choose carefully. Your submitted response will be saved as final.</p>
-    <div class="opts" role="radiogroup" aria-label="Witness response">
-      <label class="opt"><input type="radio" name="witness" value="accept"><span class="face"><span class="ic">✓</span><b>Gladly Accept</b><em>It would be an honor</em></span></label>
-      <label class="opt"><input type="radio" name="witness" value="decline"><span class="face"><span class="ic">×</span><b>Regretfully Decline</b><em>I am unable to serve</em></span></label>
-    </div>
-    <textarea class="field" id="wmsg" rows="3" maxlength="500" placeholder="Leave a message for the couple." aria-label="Message for the couple"></textarea>
-    <div class="act">
-      <button class="submit" id="submit" type="button" disabled>Submit response</button>
-      <p class="status" id="status" role="status" aria-live="polite"></p>
-    </div>
-  </div>
-</section>
-
+<div class="stack" id="panelStack">
+  <div class="layer on" id="pGuest"><div class="panel"><h2>Will You Join Us?</h2><p class="hint">Choose an answer to continue to your special invitation.</p><div class="opts" role="radiogroup" aria-label="Attendance"><label class="opt"><input type="radio" name="join" value="accepted"><span class="ic">&#10003;</span><b>Joyfully Accept</b><small>We will be there</small></label><label class="opt"><input type="radio" name="join" value="declined"><span class="ic">&times;</span><b>Regretfully Decline</b><small>We cannot attend</small></label></div><textarea id="guestMessage" maxlength="500" placeholder="Leave a message for the couple or share why you cannot attend." aria-label="Message for the couple"></textarea><div class="spaceNote">Your reply can be updated until the host locks the list.</div></div></div>
+  <div class="layer" id="pWit"><div class="panel holo"><h2>Will You Be Our Witness?</h2><p class="hint">Choose carefully. Your submitted response will be saved as final.</p><div class="opts" role="radiogroup" aria-label="Witness response"><label class="opt"><input type="radio" name="witness" value="accepted"><span class="ic">&#10003;</span><b>Gladly Accept</b><small>It would be an honor</small></label><label class="opt"><input type="radio" name="witness" value="declined"><span class="ic">&times;</span><b>Regretfully Decline</b><small>I am unable to serve</small></label></div><textarea id="witnessMessage" maxlength="500" placeholder="Leave a message for the couple." aria-label="Message for the couple"></textarea><button class="sbtn" id="submit" type="button" disabled>Submit response</button><p class="status" id="status" role="status" aria-live="polite"></p></div></div>
+  <div class="fx" id="fxP"></div>
+</div>
 <script>
-(() => {
-  const t = document.getElementById('ticket'), holo = document.getElementById('holo'),
-        shape = document.getElementById('shape'), src = document.getElementById('content'),
-        btn = document.getElementById('go'), label = document.getElementById('goText'),
-        rsvp = document.getElementById('rsvp'), submit = document.getElementById('submit'), status = document.getElementById('status'),
-        wmsg = document.getElementById('wmsg'), stampEl = document.getElementById('stamp'), stampWord = document.getElementById('stampWord'),
-        stampSub = document.getElementById('stampSub');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const HIDDEN = 'inset(0 0 100% 0)';
-  const SPREAD = 1500, STAGGER = 700, TAU = Math.PI * 2, N = 48;
-
-  const copy = extra => { const c = src.cloneNode(true); c.removeAttribute('id'); c.classList.remove('flow'); if (extra) c.classList.add(extra); c.setAttribute('aria-hidden', 'true'); return c; };
-  shape.insertBefore(copy(), holo);
-  // the foil copy carries the revealed message; same layout and size as the plain ticket
-  const hvCopy = copy('hv');
-  hvCopy.querySelectorAll('.main .label')[1].textContent = 'Our honored witness';
-  hvCopy.querySelector('.seat').textContent = 'Witness to Our Wedding';
-  hvCopy.querySelector('.note').textContent = 'We are honored for you to be our witness at the wedding. With heartfelt gratitude, we thank you.';
-  holo.appendChild(hvCopy);
-  const cv = document.createElement('canvas');
-  cv.className = 'ripples';
-  shape.appendChild(cv);
-  const ctx = cv.getContext('2d');
-
-  let on = false, busy = false, drops = [], total = 0, W = 0, H = 0;
-  const setClip = value => {
-    holo.style.clipPath = value;
-    holo.style.webkitClipPath = value;
-  };
-  const ease = value => 1 - Math.pow(1 - value, 2.4);
-
-  /* ---------- chipping reveal: the plain ticket cracks, glows, and breaks away piece by piece ---------- */
-  const COLS = 16, ROWS = 7, SPAN = 1900;
-  let cells = [];
-  function makeCells(w, h) {
-    const cw = w / COLS, ch = h / ROWS, V = [], out = [];
-    for (let j = 0; j <= ROWS; j++) { V[j] = []; for (let i = 0; i <= COLS; i++) {
-      V[j][i] = [i * cw + (i === 0 || i === COLS ? 0 : (Math.random() - .5) * cw * .7),
-                 j * ch + (j === 0 || j === ROWS ? 0 : (Math.random() - .5) * ch * .7)];
-    } }
-    for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
-      const a = V[j][i], b = V[j][i + 1], c = V[j + 1][i + 1], d = V[j + 1][i];
-      (Math.random() < .5 ? [[a, b, c], [a, c, d]] : [[a, b, d], [b, c, d]]).forEach(pts => {
-        const cross = (pts[1][0] - pts[0][0]) * (pts[2][1] - pts[0][1]) - (pts[1][1] - pts[0][1]) * (pts[2][0] - pts[0][0]);
-        if (cross < 0) pts.reverse(); // same winding everywhere so overlapping chips never cancel out
-        out.push({ pts, qi: i, qj: j, cx: (pts[0][0] + pts[1][0] + pts[2][0]) / 3, cy: (pts[0][1] + pts[1][1] + pts[2][1]) / 3,
-                   t: Infinity, vx: (Math.random() - .5) * 170, vy: -50 + Math.random() * 70, vr: (Math.random() - .5) * 9 });
-      });
-    }
-    out.forEach(c => { c.nb = []; out.forEach((m, k) => { if (m !== c && Math.abs(m.qi - c.qi) <= 1 && Math.abs(m.qj - c.qj) <= 1) c.nb.push([k, 50 + Math.random() * 140]); }); });
-    // chipping starts at a few random points near the middle, then keeps breaking outward
-    const mid = out.map((c, k) => k).filter(k => Math.abs(out[k].cx - w / 2) < w * .25 && Math.abs(out[k].cy - h / 2) < h * .3);
-    for (let n = 0; n < 3; n++) out[mid[Math.floor(Math.random() * mid.length)]].t = Math.random() * 200;
-    const seen = new Set();
-    for (let n = 0; n < out.length; n++) {
-      let best = -1; out.forEach((c, k) => { if (!seen.has(k) && c.t < Infinity && (best < 0 || c.t < out[best].t)) best = k; });
-      if (best < 0) break; seen.add(best);
-      out[best].nb.forEach(([k, wt]) => { if (out[best].t + wt < out[k].t) out[k].t = out[best].t + wt; });
-    }
-    const mx = Math.max(...out.map(c => c.t));
-    out.forEach(c => { c.t = c.t / mx * SPAN; });
-    total = SPAN + 900;
-    return out;
-  }
-  const poly = (pts, cx, cy, scale) => 'M' + pts.map((point, index) =>
-    (index ? 'L' : '') + (cx + (point[0] - cx) * scale).toFixed(1) + ' ' + (cy + (point[1] - cy) * scale).toFixed(1)
-  ).join('') + 'Z';
-  const trace = (pts, ox, oy) => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0] + ox, p[1] + oy) : ctx.moveTo(p[0] + ox, p[1] + oy)); ctx.closePath(); };
-
-  function paint(ms, fx) {
-    ctx.clearRect(0, 0, W, H);
-    let clip = '';
-    cells.forEach(c => {
-      const progress = Math.min(Math.max((ms - c.t) / 240, 0), 1);
-      if (progress > 0) clip += poly(c.pts, c.cx, c.cy, .55 + .52 * ease(progress));
-      if (!fx) return;
-      const dt = ms - c.t;
-      if (dt < 0 && dt > -340) { // hairline crack with light leaking through just before it breaks
-        trace(c.pts, 0, 0); ctx.shadowBlur = 10; ctx.shadowColor = '#ffe9a8';
-        ctx.strokeStyle = `rgba(255,246,210,${.95 * (1 + dt / 340)})`; ctx.lineWidth = 1.3; ctx.stroke(); ctx.shadowBlur = 0;
-      } else if (dt >= 0 && dt < 420) { // burst of light where the piece came off
-        const a = 1 - dt / 420;
-        trace(c.pts, 0, 0); ctx.fillStyle = `rgba(255,255,255,${a * .75})`; ctx.fill();
-        ctx.shadowBlur = 14; ctx.shadowColor = '#9fe3ff'; ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 1.6; ctx.stroke(); ctx.shadowBlur = 0;
-      }
-      if (dt >= 0 && dt < 850) { // the broken chip tumbles away
-        const age = dt / 1000, al = 1 - dt / 850;
-        ctx.save(); ctx.translate(c.cx + c.vx * age, c.cy + c.vy * age + 700 * age * age); ctx.rotate(c.vr * age);
-        trace(c.pts, -c.cx, -c.cy); ctx.fillStyle = `rgba(252,250,244,${al})`; ctx.fill();
-        ctx.strokeStyle = `rgba(217,211,194,${al})`; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
-      }
-    });
-    setClip(clip ? `path('${clip}')` : HIDDEN);
-  }
-
-  /* ---------- RSVP: the question changes with the hologram, the answer decides how the ticket ends ---------- */
-  let choice = null, final = false, swapT = 0, saving = false, initialized = false;
-  let resizeFrame = 0, lastReportedHeight = 0;
-  let saveResponse = null, reportHeight = null;
-  const plainPane = rsvp.querySelector('.pane.plain');
-  const witnessPane = rsvp.querySelector('.pane.witness');
-  const joinOpts = [...rsvp.querySelectorAll('input[name="join"]')];
-  plainPane.inert = true;
-  witnessPane.inert = true;
-  // The first answer reveals the witness invitation; only its final submit is persisted.
-  plainPane.querySelector('.hint').textContent = 'Choose an answer to continue to your special invitation.';
-  joinOpts.forEach(input => input.addEventListener('change', () => {
-    if (!input.checked || on || busy || final || !initialized) return;
-    wmsg.value = plainPane.querySelector('textarea').value;
-    plainPane.inert = true;
-    toggle(() => {
-      witnessPane.inert = false;
-    });
-  }));
-  const wOpts = [...rsvp.querySelectorAll('input[name="witness"]')];
-  const setLabel = () => { label.textContent = final ? 'Reset demo' : on ? 'Back to plain ticket' : 'Reveal hologram'; btn.setAttribute('aria-pressed', on); };
-  const syncSubmit = () => { submit.disabled = !initialized || !choice || busy || saving || final; };
-  const swap = v => {
-    plainPane.inert = v || !initialized;
-    witnessPane.inert = !v || busy;
-    if (rsvp.classList.contains('witness') === v) return;
-    rsvp.classList.toggle('witness', v);
-    if (v) {
-      src.querySelectorAll('.main .label')[1].textContent = 'Our honored witness';
-      src.querySelector('.seat').textContent = 'Witness to Our Wedding';
-      src.querySelector('.note').textContent = hvCopy.querySelector('.note').textContent;
-    }
-  };
-  rsvp.addEventListener('animationend', e => { if (e.animationName === 'sweep') rsvp.classList.remove('sweep'); });
-  shape.addEventListener('animationend', e => { if (e.animationName === 'thud') shape.classList.remove('thud'); });
-  wOpts.forEach(i => i.addEventListener('change', () => { choice = i.value; syncSubmit(); }));
-
-  function stamp(kind) {
-    const ok = kind === 'reserved';
-    stampWord.textContent = ok ? 'Reserved' : 'Declined';
-    stampSub.textContent = ok ? 'Witness · Confirmed' : 'With regrets';
-    stampEl.className = 'stamp ' + kind;
-    void stampEl.offsetWidth;
-    stampEl.classList.add('inking');
-    if (!reduce.matches) setTimeout(() => { shape.classList.remove('thud'); void shape.offsetWidth; shape.classList.add('thud'); }, 300); // the paper takes the hit
-  }
-
-  function showFinal(result, animate) {
-    choice = result.status === 'accepted' ? 'accept' : 'decline';
-    final = true;
-    wmsg.value = result.note || '';
-    wmsg.readOnly = true;
-    wOpts.forEach(input => { input.checked = input.value === choice; input.disabled = true; });
-    rsvp.classList.add('locked');
-    swap(true);
-    status.textContent = choice === 'accept'
-      ? 'Saved. Thank you, we are honored to have you beside us.'
-      : 'Saved. Thank you for letting us know. You will be in our hearts.';
-    syncSubmit();
-    if (choice === 'accept') {
-      on = true;
-      setClip('none');
-      t.classList.add('on', 'accepted');
-      setTimeout(() => stamp('reserved'), animate && !reduce.matches ? 500 : 0);
-    } else if (animate && on) {
-      toggle(() => stamp('declined'));
-    } else {
-      on = false;
-      setClip(HIDDEN);
-      t.classList.remove('on', 'accepted');
-      stamp('declined');
-    }
-  }
-
-  submit.addEventListener('click', async () => {
-    if (!choice || busy || saving || final || !saveResponse) return;
-    saving = true;
-    wOpts.forEach(input => { input.disabled = true; });
-    wmsg.readOnly = true;
-    rsvp.setAttribute('aria-busy', 'true');
-    status.textContent = 'Saving your response...';
-    syncSubmit();
-    try {
-      const result = await saveResponse(choice === 'accept' ? 'accepted' : 'declined', wmsg.value.trim());
-      if (!result || !['accepted', 'declined'].includes(result.status)) throw new Error('Response was not saved.');
-      showFinal(result, true);
-    } catch (error) {
-      status.textContent = 'We could not save your response. Please try again.';
-      wOpts.forEach(input => { input.disabled = false; });
-      wmsg.readOnly = false;
-    } finally {
-      saving = false;
-      rsvp.removeAttribute('aria-busy');
-      syncSubmit();
-    }
-  });
-
-  // Only the parent invitation supplies guest data and the existing private RSVP save.
-  window.initializeWitnessTicket = options => {
-    if (initialized) return;
-    initialized = true;
-    saveResponse = options.save;
-    reportHeight = options.resize;
-    document.querySelectorAll('.number').forEach(el => { el.textContent = options.reservationNumber || 'Unassigned'; });
-    document.title = 'Reservation for ' + options.name;
-    t.setAttribute('aria-label', 'Reservation for ' + options.name);
-    plainPane.inert = false;
-    if (['accepted', 'declined'].includes(options.status)) {
-      showFinal({ status: options.status, note: options.note }, false);
-    }
-    syncSubmit();
-    resize();
-  };
-  window.revealWitnessInvitation = ({ response, note }) => {
-    if (!initialized || on || busy || final) return;
-    plainPane.querySelector('textarea').value = note || '';
-    resize();
-    const input = joinOpts.find(option => option.value === (response === 'accepted' ? 'accept' : 'decline'));
-    input.checked = true;
-    input.dispatchEvent(new Event('change'));
-  };
-  function resize() {
-    // Batch layout reads/writes and only notify the parent when the actual
-    // content height changed. This avoids a resize feedback loop and the
-    // iframe scrollbar flash that used to happen between RSVP panes.
-    cancelAnimationFrame(resizeFrame);
-    resizeFrame = requestAnimationFrame(() => {
-      src.style.minHeight = '';
-      src.style.minHeight = Math.ceil(Math.max(hvCopy.scrollHeight, shape.querySelector('.content').scrollHeight)) + 'px';
-      const height = Math.ceil(document.body.scrollHeight) + 2;
-      if (height !== lastReportedHeight) {
-        lastReportedHeight = height;
-        reportHeight?.(height);
-      }
-    });
-  }
-  new ResizeObserver(resize).observe(document.body);
-  document.fonts.ready.then(resize);
-
-  function toggle(done) {
-    if (busy) return;
-    busy = true;
-    on = !on;
-    setLabel(); syncSubmit();
-    t.classList.toggle('on', on);
-    t.style.transform = '';
-    clearTimeout(swapT);
-    if (!on && !final) swap(false);
-
-    const r = t.getBoundingClientRect();
-    W = r.width; H = r.height;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    if (on) cells = makeCells(W, H);
-
-    const finish = () => {
-      setClip(on ? 'none' : HIDDEN);
-      ctx.clearRect(0, 0, W, H);
-      if (on) swap(true);
-      busy = false;
-      syncSubmit();
-      if (done) done();
-    };
-    if (reduce.matches || !cells.length) return finish();
-
-    const dur = on ? total : 900, t0 = performance.now();
-    (function frame(now) {
-      const u = Math.min((now - t0) / dur, 1);
-      // The generated chip mask itself reveals the hologram. There is no
-      // separate fade before or after the paper breaks away.
-      paint(on ? u * total : (1 - u) * SPAN, on);
-      if (u < 1) requestAnimationFrame(frame); else finish();
-    })(t0);
-  }
-
+(()=>{
+const $=id=>document.getElementById(id),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,NS='http://www.w3.org/2000/svg';
+const colors=['#ff5fb8','#ffd75e','#7dffb0','#5fe3ff','#8e7dff','#ffffff'],glows=['#6fe7ff','#ff7ad1','#ffd75e'];
+const FX='<div class="core"></div><div class="rays"></div><div class="burst"></div><div class="flash"></div><div class="shards"></div><svg></svg>',rnd=(a,b)=>a+Math.random()*(b-a);
+let initialized=false,witnessShown=false,busy=false,saving=false,final=false,saveResponse=null,reportHeight=null,pendingReveal=null;
+const submit=$('submit'),status=$('status'),guestMessage=$('guestMessage'),witnessMessage=$('witnessMessage'),joinOptions=[...document.querySelectorAll('input[name="join"]')],witnessOptions=[...document.querySelectorAll('input[name="witness"]')];
+function crack(x,y,ang,len,depth,out){const pts=[[x,y]],steps=Math.max(4,Math.round(len/13));for(let i=1;i<=steps;i++){ang+=rnd(-.6,.6);x+=Math.cos(ang)*len/steps;y+=Math.sin(ang)*len/steps;pts.push([x,y]);if(depth>0&&Math.random()<.38)crack(x,y,ang+(Math.random()<.5?-1:1)*rnd(.5,1.1),len*rnd(.3,.55),depth-1,out)}out.push('M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L'))}
+function drawCracks(svg,w,h,ox,oy,n,len){svg.setAttribute('viewBox','0 0 '+w+' '+h);svg.innerHTML='';const paths=[],els=[];for(let i=0;i<n;i++)crack(ox,oy,(Math.PI*2/n)*i+rnd(-.3,.3),len*rnd(.75,1.15),2,paths);[{w:9,o:.7,f:'blur(5px)',g:1},{w:3.4,o:1,c:'#ffe9a8'},{w:1.4,o:1,c:'#fff'}].forEach(style=>paths.forEach((path,i)=>{const el=document.createElementNS(NS,'path');el.setAttribute('d',path);el.setAttribute('pathLength','1');el.setAttribute('fill','none');el.setAttribute('stroke',style.g?glows[i%3]:style.c);el.setAttribute('stroke-width',style.w);el.setAttribute('stroke-linecap','round');el.setAttribute('stroke-linejoin','round');el.style.opacity=style.o;if(style.f)el.style.filter=style.f;el.style.strokeDasharray='1';el.style.strokeDashoffset='1';svg.appendChild(el);els.push({el,i})}));return els}
+function sparks(fx,ox,oy,n,radius){for(let i=0;i<n;i++){const spark=document.createElement('i');spark.className='spark';spark.style.left=ox+'px';spark.style.top=oy+'px';const color=colors[i%colors.length];spark.style.background=color;spark.style.boxShadow='0 0 9px '+color;fx.appendChild(spark);const angle=rnd(0,6.28),distance=rnd(radius*.3,radius);spark.animate([{transform:'translate(0,0) scale(1.3)',opacity:1},{transform:`translate(${Math.cos(angle)*distance}px,${Math.sin(angle)*distance}px) scale(0)`,opacity:0}],{duration:rnd(700,1300),delay:rnd(0,150),easing:'cubic-bezier(.1,.7,.3,1)',fill:'forwards'})}}
+function triangles(cols,rows){const points=[],out=[];for(let j=0;j<=rows;j++){points[j]=[];for(let i=0;i<=cols;i++){let x=i/cols*100,y=j/rows*100;if(i>0&&i<cols)x+=rnd(-.4,.4)*100/cols;if(j>0&&j<rows)y+=rnd(-.4,.4)*100/rows;points[j][i]=[x,y]}}for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const a=points[j][i],b=points[j][i+1],d=points[j+1][i],e=points[j+1][i+1];Math.random()<.5?out.push([a,b,d],[b,e,d]):out.push([a,b,e],[a,e,d])}return out}
+function shatter(config,fx,w,h){const box=fx.querySelector('.shards');triangles(config.cols,config.rows).forEach(points=>{const clone=config.out.cloneNode(true);clone.removeAttribute('id');clone.classList.add('on');clone.style.clipPath='polygon('+points.map(p=>p[0].toFixed(1)+'% '+p[1].toFixed(1)+'%').join(',')+')';const cx=(points[0][0]+points[1][0]+points[2][0])/3,cy=(points[0][1]+points[1][1]+points[2][1])/3;clone.style.transformOrigin=cx+'% '+cy+'%';const vx=cx/100*w-config.ox,vy=cy/100*h-config.oy,magnitude=Math.hypot(vx,vy)||1,distance=rnd(.7,1.6)*config.power,dx=vx/magnitude*distance+rnd(-20,20),dy=vy/magnitude*distance+config.grav*rnd(.6,1.4);box.appendChild(clone);clone.animate([{transform:'none',opacity:1,filter:'brightness(2.4) saturate(.5)'},{transform:`translate(${dx*.55}px,${dy*.4}px) rotate(${rnd(-25,25)}deg) scale(1.03)`,opacity:1,filter:'brightness(1.1)',offset:.45},{transform:`translate(${dx}px,${dy}px) rotate(${rnd(-160,160)}deg) scale(.55)`,opacity:0,filter:'brightness(1)'}],{duration:rnd(850,1250),easing:'cubic-bezier(.15,.7,.3,1)',fill:'forwards'})})}
+function play(config){const w=config.stack.offsetWidth,h=config.stack.offsetHeight,fx=config.fx;fx.innerHTML=FX;fx.style.setProperty('--ox',config.ox+'px');fx.style.setProperty('--oy',config.oy+'px');const q=selector=>fx.querySelector(selector);config.stack.style.transformOrigin='50% 100%';config.stack.animate([[0,0],[.07,-7],[.14,7],[.21,-5],[.28,4],[.34,0],[.5,0],[.56,-10],[.63,10],[.7,-8],[.76,7],[.81,-4],[.85,0],[.88,0],[.9,-12],[.92,12],[.94,-12],[.96,12],[.98,-6],[1,0]].map(frame=>({offset:frame[0],easing:'ease-in-out',transform:`rotate(${frame[1]*config.amp}deg) translateY(${-Math.abs(frame[1])*.2*config.amp}px)`})),{duration:config.t});const charge=config.out.animate([{filter:'brightness(1)'},{filter:'brightness(1.2) saturate(1.2)'},{filter:'brightness(1.7) saturate(1.3)'},{filter:'brightness(2.4) saturate(.5)'}],{duration:config.t,easing:'ease-in',fill:'forwards'});q('.core').animate([{opacity:0,transform:'scale(.2)'},{opacity:1,transform:'scale(1.1)',offset:.7},{opacity:1,transform:'scale(2.4)'}],{duration:config.t,easing:'ease-in',fill:'forwards'});drawCracks(q('svg'),w,h,config.ox,config.oy,config.n,config.len).forEach(item=>item.el.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:config.t*.1,delay:config.t*(.36+(item.i%7)*.08),easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'}));q('svg').animate([{opacity:1},{opacity:.55},{opacity:1},{opacity:.7},{opacity:1}],{duration:config.t,easing:'steps(5)'});setTimeout(()=>{config.in.classList.add('on');shatter(config,fx,w,h);config.out.classList.remove('on');charge.cancel();q('.flash').animate([{opacity:.95},{opacity:0}],{duration:520,easing:'ease-out'});q('.burst').animate([{transform:'scale(.2)',opacity:1},{transform:'scale(11)',opacity:0}],{duration:1100,easing:'cubic-bezier(.1,.7,.3,1)'});q('.rays').animate([{transform:'scale(.2) rotate(0)',opacity:1},{transform:'scale(2.6) rotate(50deg)',opacity:0}],{duration:1000,easing:'ease-out'});q('.core').animate([{opacity:1,transform:'scale(2.4)'},{opacity:0,transform:'scale(4.5)'}],{duration:600,fill:'forwards'});q('svg').animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'});sparks(fx,config.ox,config.oy,26,config.spark)},config.t);setTimeout(()=>{fx.innerHTML=''},config.t+1500)}
+function syncSubmit(){submit.disabled=!initialized||busy||saving||final||!witnessOptions.some(option=>option.checked)}
+function showWitness(animate=true){if(witnessShown||busy||final)return;witnessShown=true;witnessMessage.value=guestMessage.value;const tIn=$('tWit'),tOut=$('tGuest'),pIn=$('pWit'),pOut=$('pGuest');if(!animate||reduce){tIn.classList.add('on');tOut.classList.remove('on');pIn.classList.add('on');pOut.classList.remove('on');syncSubmit();return}busy=true;syncSubmit();const ts=$('ticketStack'),ps=$('panelStack');play({stack:ts,fx:$('fxT'),in:tIn,out:tOut,ox:ts.offsetWidth*.72,oy:ts.offsetHeight*.5,n:6,len:ts.offsetWidth*.6,cols:7,rows:3,power:230,grav:60,spark:200,t:1900,amp:.6});setTimeout(()=>play({stack:ps,fx:$('fxP'),in:pIn,out:pOut,ox:ps.offsetWidth*.5,oy:ps.offsetHeight*.38,n:7,len:ps.offsetHeight*.65,cols:5,rows:6,power:300,grav:220,spark:240,t:1900,amp:.25}),500);setTimeout(()=>{busy=false;syncSubmit();pIn.querySelector('input:not(:disabled)')?.focus({preventScroll:true})},3800)}
+function lockFinal(result){showWitness(false);final=true;witnessMessage.value=result.note||'';witnessMessage.readOnly=true;witnessOptions.forEach(option=>{option.checked=option.value===result.status;option.disabled=true});submit.disabled=true;submit.textContent=result.status==='accepted'?'Response saved — thank you':'Response saved';status.textContent=result.status==='accepted'?'Saved. Thank you, we are honored to have you beside us.':'Saved. Thank you for letting us know. You will be in our hearts.'}
+joinOptions.forEach(option=>option.addEventListener('change',()=>{if(option.checked&&initialized&&!busy&&!final)showWitness(true)}));
+witnessOptions.forEach(option=>option.addEventListener('change',syncSubmit));
+submit.addEventListener('click',async()=>{const selected=witnessOptions.find(option=>option.checked);if(!selected||busy||saving||final||!saveResponse)return;saving=true;witnessOptions.forEach(option=>option.disabled=true);witnessMessage.readOnly=true;submit.textContent='Saving response…';syncSubmit();try{const result=await saveResponse(selected.value,witnessMessage.value.trim());if(!result||!['accepted','declined'].includes(result.status))throw new Error('Response was not saved.');lockFinal(result)}catch(error){status.textContent='We could not save your response. Please try again.';submit.textContent='Try again';witnessOptions.forEach(option=>option.disabled=false);witnessMessage.readOnly=false}finally{saving=false;syncSubmit()}});
+function resize(){requestAnimationFrame(()=>reportHeight?.(Math.ceil(document.body.scrollHeight)+2))}new ResizeObserver(resize).observe(document.body);document.fonts.ready.then(resize);
+window.initializeWitnessTicket=options=>{if(initialized)return;initialized=true;saveResponse=options.save;reportHeight=options.resize;document.querySelectorAll('.num').forEach(number=>number.textContent=options.reservationNumber||'Unassigned');document.title='Reservation for '+options.name;if(['accepted','declined'].includes(options.status))lockFinal({status:options.status,note:options.note});syncSubmit();resize();if(pendingReveal){const reveal=pendingReveal;pendingReveal=null;window.revealWitnessInvitation(reveal)}};
+window.revealWitnessInvitation=details=>{if(!initialized){pendingReveal=details;return}if(witnessShown||final)return;guestMessage.value=details.note||'';const selected=document.querySelector(`input[name="join"][value="${details.response}"]`);if(selected)selected.checked=true;showWitness(true)};
 })();
 </script>
 </body>
