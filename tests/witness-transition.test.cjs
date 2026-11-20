@@ -6,12 +6,15 @@ const script=fs.readFileSync('assets/js/script.js','utf8');
 const style=fs.readFileSync('assets/css/style.css','utf8');
 const witness=fs.readFileSync('assets/animations/witness-reservation-ticket.html','utf8');
 
-test('witness iframe preserves the compact reference footprint',()=>{
+test('witness iframe preserves the regular reservation footprint',()=>{
   assert.match(script,/setAttribute\("scrolling", "no"\)/);
-  assert.match(style,/\.witness-ticket-frame \{[\s\S]*?max-width: 400px;[\s\S]*?height: 456px;/);
+  assert.match(style,/has-witness-ticket #fit,[\s\S]*?visibility: hidden;/);
+  assert.match(style,/\.witness-ticket-frame \{[\s\S]*?position: absolute;[\s\S]*?width: 100%;[\s\S]*?max-width: none;/);
+  assert.doesNotMatch(style,/has-witness-ticket \{ --phone-tab-scale: 1 !important; \}/);
   assert.match(witness,/html,body\{margin:0;overflow:hidden/);
-  assert.match(witness,/#ticketStack\{height:134px;margin-bottom:16px\}/);
-  assert.match(witness,/#panelStack\{height:296px\}/);
+  assert.match(witness,/#ticketStack\{width:min\(440px,94%\);height:clamp\(128px,32vw,150px\);margin:0 auto 15px/);
+  assert.match(witness,/#panelStack\{height:294px\}/);
+  assert.match(witness,/@media\(max-width:560px\)\{#panelStack\{height:252px\}/);
 });
 
 test('guest and witness states share fixed ticket and RSVP stacks',()=>{
@@ -20,8 +23,25 @@ test('guest and witness states share fixed ticket and RSVP stacks',()=>{
   assert.match(witness,/id="tWit"/);
   assert.match(witness,/id="pGuest"/);
   assert.match(witness,/id="pWit"/);
-  assert.match(script,/frame\.hidden = false/);
+  assert.match(script,/frame\.hidden = true/);
+  assert.match(script,/if \(alreadyAnswered\) \{[\s\S]*?frame\.hidden = false/);
   assert.match(script,/section\.classList\.add\("has-witness-ticket"\)/);
+});
+
+test('witness layers copy the live normal ticket and RSVP card dimensions',()=>{
+  assert.match(script,/function getWitnessLayout\(\)/);
+  assert.match(script,/ticketWidth: normalTicket\.offsetWidth/);
+  assert.match(script,/ticketHeight: normalTicket\.offsetHeight/);
+  assert.match(script,/panelWidth: normalPanel\.offsetWidth/);
+  assert.match(script,/panelHeight: normalPanel\.offsetHeight/);
+  assert.match(script,/layout: getWitnessLayout\(\)/);
+  assert.match(script,/new ResizeObserver\(\(\) => syncWitnessLayout\(frame\)\)/);
+  assert.match(witness,/window\.updateWitnessTicketLayout=applyLayout/);
+  assert.match(witness,/ticketStack\.style\.width=layout\.ticketWidth\+'px'/);
+  assert.match(witness,/ticketStack\.style\.height=layout\.ticketHeight\+'px'/);
+  assert.match(witness,/panelStack\.style\.width=layout\.panelWidth\+'px'/);
+  assert.match(witness,/panelStack\.style\.height=layout\.panelHeight\+'px'/);
+  assert.doesNotMatch(witness,/Your reply can be updated until the host locks the list/);
 });
 
 test('reference holographic design is retained',()=>{
@@ -31,14 +51,17 @@ test('reference holographic design is retained',()=>{
   assert.match(witness,/filter:url\(#bump\) drop-shadow/);
 });
 
-test('egg-crack transition shatters both ticket and RSVP card',()=>{
-  assert.match(witness,/function crack\(/);
-  assert.match(witness,/function drawCracks\(/);
-  assert.match(witness,/function shatter\(/);
-  assert.match(witness,/stack:ts,fx:\$\('fxT'\)/);
-  assert.match(witness,/stack:ps,fx:\$\('fxP'\)/);
-  assert.match(witness,/t:1900,amp:\.6/);
-  assert.match(witness,/t:1900,amp:\.25/);
+test('glow transition ends in a light burst without cracking or resizing',()=>{
+  assert.doesNotMatch(witness,/function crack\(/);
+  assert.doesNotMatch(witness,/function drawCracks\(/);
+  assert.doesNotMatch(witness,/function shatter\(/);
+  assert.match(witness,/drop-shadow\(0 0 42px rgba\(142,125,255,\.9\)\)/);
+  assert.match(witness,/q\('\.flash'\)\.animate/);
+  assert.match(witness,/q\('\.burst'\)\.animate/);
+  assert.match(witness,/q\('\.rays'\)\.animate/);
+  assert.match(witness,/fx:\$\('fxT'\).*t:1250/);
+  assert.match(witness,/fx:\$\('fxP'\).*t:1250/);
+  assert.doesNotMatch(witness,/config\.stack\.animate/);
 });
 
 test('witness transition still uses the parent save callback and final lock',()=>{

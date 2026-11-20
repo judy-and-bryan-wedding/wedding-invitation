@@ -310,6 +310,29 @@ const isWitnessGuest = () => witnessGuestNames.has(
 let witnessSavePending = false;
 let pendingWitnessReveal = null;
 
+function getWitnessLayout() {
+  const section = $("reservations");
+  const grid = section?.querySelector(".reservations-grid");
+  const normalTicket = $("fit");
+  const normalPanel = section?.querySelector(".rsvp-card");
+  if (!grid || !normalTicket || !normalPanel) return null;
+  const gridStyle = getComputedStyle(grid);
+  return {
+    ticketWidth: normalTicket.offsetWidth,
+    ticketHeight: normalTicket.offsetHeight,
+    panelWidth: normalPanel.offsetWidth,
+    panelHeight: normalPanel.offsetHeight,
+    gap: parseFloat(gridStyle.rowGap) || parseFloat(gridStyle.gap) || 15
+  };
+}
+
+function syncWitnessLayout(frame = $("witnessTicketFrame")) {
+  const layout = getWitnessLayout();
+  if (!frame || !layout || frame.dataset.ready !== "true") return;
+  frame.style.height = `${Math.ceil(layout.ticketHeight + layout.gap + layout.panelHeight + 2)}px`;
+  frame.contentWindow.updateWitnessTicketLayout(layout);
+}
+
 function revealWitnessInvitation(response) {
   const frame = $("witnessTicketFrame");
   pendingWitnessReveal = { response, note: rsvpNote?.value || "" };
@@ -364,29 +387,51 @@ async function saveWitnessResponse(response, note) {
 function mountWitnessTicket() {
   if (!isWitnessGuest() || $("witnessTicketFrame")) return;
   const section = $("reservations");
+  const grid = section.querySelector(".reservations-grid");
+  const normalTicket = $("fit");
+  const normalPanel = section.querySelector(".rsvp-card");
   const frame = document.createElement("iframe");
   frame.id = "witnessTicketFrame";
   frame.title = `Reservation and witness response for ${guest.name}`;
   frame.className = "witness-ticket-frame";
   frame.setAttribute("scrolling", "no");
   const alreadyAnswered = ["accepted", "declined"].includes(guest.rsvp_status);
-  frame.hidden = false;
+  frame.hidden = true;
   frame.addEventListener("load", () => {
     frame.contentWindow.initializeWitnessTicket({
       name: guest.name,
       reservationNumber: guest.reservation_number,
       status: guest.rsvp_status,
       note: guest.rsvp_note,
+      layout: getWitnessLayout(),
       save: saveWitnessResponse,
-      resize: height => { frame.style.height = `${height}px`; }
+      resize: height => {
+        frame.style.height = `${height}px`;
+        schedulePhoneTabFit();
+      }
     });
     frame.dataset.ready = "true";
-    window.requestAnimationFrame(() => frame.classList.add("is-visible"));
-    if (pendingWitnessReveal) revealWitnessInvitation(pendingWitnessReveal.response);
+    syncWitnessLayout(frame);
+    if (alreadyAnswered) {
+      section.classList.add("has-witness-ticket");
+      frame.hidden = false;
+      window.requestAnimationFrame(() => frame.classList.add("is-visible"));
+    } else if (pendingWitnessReveal) {
+      revealWitnessInvitation(pendingWitnessReveal.response);
+    }
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html?v=prismatic-reference-2";
-  section.classList.add("has-witness-ticket");
-  section.querySelector(".reservations-grid").prepend(frame);
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=matching-footprint-1";
+  grid.prepend(frame);
+
+  if (typeof ResizeObserver !== "undefined") {
+    const witnessLayoutObserver = new ResizeObserver(() => syncWitnessLayout(frame));
+    witnessLayoutObserver.observe(normalTicket);
+    witnessLayoutObserver.observe(normalPanel);
+    witnessLayoutObserver.observe(grid);
+  }
+  window.addEventListener("resize", () => syncWitnessLayout(frame), { passive: true });
+  document.fonts?.ready.then(() => syncWitnessLayout(frame));
+  schedulePhoneTabFit();
 }
 
 const ticketAnimation = {

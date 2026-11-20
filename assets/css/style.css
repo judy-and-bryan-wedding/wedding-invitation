@@ -6201,23 +6201,35 @@ main > .section{
   #selfie .face-filter-option span{font-size:14px}
   #selfie .face-filter-none{min-height:34px}
 }
-/* The reference ticket lives in its own document to preserve its exact styles. */
-#reservations.has-witness-ticket { --phone-tab-scale: 1 !important; }
+/*
+ * Witnesses start on the real guest RSVP. Once they answer, the holographic
+ * document is laid over that same footprint while the original cards keep the
+ * grid's geometry intact underneath it.
+ */
 #reservations .witness-ticket-frame[hidden] { display: none; }
 #reservations.has-witness-ticket #fit,
-#reservations.has-witness-ticket .rsvp-card { display: none; }
+#reservations.has-witness-ticket .rsvp-card {
+  visibility: hidden;
+  pointer-events: none;
+}
+#reservations .reservations-grid { position: relative; }
 #reservations .witness-ticket-frame {
   display: block;
-  grid-column: 1 / -1;
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 400px;
-  height: 456px;
-  margin-inline: auto;
+  max-width: none;
+  height: 0;
   border: 0;
   background: transparent;
   overflow: hidden;
+  opacity: 0;
   pointer-events: none;
+  transition: opacity .12s ease-out;
 }
 #reservations .witness-ticket-frame.is-visible {
+  opacity: 1;
   pointer-events: auto;
 }
