@@ -60,8 +60,11 @@ test('ticket and RSVP card chip away together like petals in the wind',()=>{
   assert.match(witness,/function buildWindChips\(outgoing\)/);
   assert.match(witness,/cols=5,rows=4/);
   assert.match(witness,/chip\.style\.clipPath=`polygon/);
+  assert.match(witness,/delay=col\*50\+row\*32,duration=1450\+\(index%5\)\*90/);
+  assert.match(witness,/opacity:1,offset:\.14/);
   assert.match(witness,/translate3d\(\$\{dx\}px,\$\{dy\}px,0\).*rotateY\(76deg\)/);
   assert.match(witness,/function windChipTransition\(outgoing,incoming\)/);
+  assert.match(witness,/duration:1900,easing:'ease-out'/);
   assert.match(witness,/windChipTransition\(tOut,tIn\),windChipTransition\(pOut,pIn\)/);
   assert.doesNotMatch(witness,/setTimeout\(\(\)=>windChipTransition/);
 });
