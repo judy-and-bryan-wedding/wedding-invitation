@@ -51,17 +51,19 @@ test('reference holographic design is retained',()=>{
   assert.match(witness,/filter:url\(#bump\) drop-shadow/);
 });
 
-test('witness reveal uses a simple stationary crossfade',()=>{
+test('ticket and RSVP card chip away together like petals in the wind',()=>{
   assert.doesNotMatch(witness,/function crack\(/);
   assert.doesNotMatch(witness,/function drawCracks\(/);
   assert.doesNotMatch(witness,/function shatter\(/);
-  assert.doesNotMatch(witness,/class="fx"/);
-  assert.doesNotMatch(witness,/function sparks\(/);
-  assert.doesNotMatch(witness,/\.flash|\.burst|\.rays|\.core/);
-  assert.match(witness,/function crossfade\(outgoing,incoming\)/);
-  assert.match(witness,/duration:420,easing:'ease-in-out'/);
-  assert.match(witness,/crossfade\(tOut,tIn\),crossfade\(pOut,pIn\)/);
-  assert.doesNotMatch(witness,/transform:`|scale\(/);
+  assert.match(witness,/\.chip-field\{/);
+  assert.match(witness,/\.wind-chip\{/);
+  assert.match(witness,/function buildWindChips\(outgoing\)/);
+  assert.match(witness,/cols=5,rows=4/);
+  assert.match(witness,/chip\.style\.clipPath=`polygon/);
+  assert.match(witness,/translate3d\(\$\{dx\}px,\$\{dy\}px,0\).*rotateY\(76deg\)/);
+  assert.match(witness,/function windChipTransition\(outgoing,incoming\)/);
+  assert.match(witness,/windChipTransition\(tOut,tIn\),windChipTransition\(pOut,pIn\)/);
+  assert.doesNotMatch(witness,/setTimeout\(\(\)=>windChipTransition/);
 });
 
 test('witness transition still uses the parent save callback and final lock',()=>{
