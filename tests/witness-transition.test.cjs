@@ -51,17 +51,17 @@ test('reference holographic design is retained',()=>{
   assert.match(witness,/filter:url\(#bump\) drop-shadow/);
 });
 
-test('glow transition ends in a light burst without cracking or resizing',()=>{
+test('witness reveal uses a simple stationary crossfade',()=>{
   assert.doesNotMatch(witness,/function crack\(/);
   assert.doesNotMatch(witness,/function drawCracks\(/);
   assert.doesNotMatch(witness,/function shatter\(/);
-  assert.match(witness,/drop-shadow\(0 0 42px rgba\(142,125,255,\.9\)\)/);
-  assert.match(witness,/q\('\.flash'\)\.animate/);
-  assert.match(witness,/q\('\.burst'\)\.animate/);
-  assert.match(witness,/q\('\.rays'\)\.animate/);
-  assert.match(witness,/fx:\$\('fxT'\).*t:1250/);
-  assert.match(witness,/fx:\$\('fxP'\).*t:1250/);
-  assert.doesNotMatch(witness,/config\.stack\.animate/);
+  assert.doesNotMatch(witness,/class="fx"/);
+  assert.doesNotMatch(witness,/function sparks\(/);
+  assert.doesNotMatch(witness,/\.flash|\.burst|\.rays|\.core/);
+  assert.match(witness,/function crossfade\(outgoing,incoming\)/);
+  assert.match(witness,/duration:420,easing:'ease-in-out'/);
+  assert.match(witness,/crossfade\(tOut,tIn\),crossfade\(pOut,pIn\)/);
+  assert.doesNotMatch(witness,/transform:`|scale\(/);
 });
 
 test('witness transition still uses the parent save callback and final lock',()=>{
