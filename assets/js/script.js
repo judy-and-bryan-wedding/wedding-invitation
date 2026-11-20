@@ -420,7 +420,7 @@ function mountWitnessTicket() {
       revealWitnessInvitation(pendingWitnessReveal.response);
     }
   }, { once: true });
-  frame.src = "assets/animations/witness-reservation-ticket.html?v=slow-wind-chips-1";
+  frame.src = "assets/animations/witness-reservation-ticket.html?v=slow-wind-chips-2";
   grid.prepend(frame);
 
   if (typeof ResizeObserver !== "undefined") {
